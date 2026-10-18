@@ -40,7 +40,8 @@ add_executable(${CMAKE_PROJECT_NAME}
         Drivers/BSP/Components/ft5336/ft5336.c
         Drivers/STM32746G-Discovery/stm32746g_discovery.c
 #        Drivers/STM32746G-Discovery/stm32746g_discovery_audio.c
-        Drivers/STM32746G-Discovery/stm32746g_discovery_ts.c)
+        Drivers/STM32746G-Discovery/stm32746g_discovery_ts.c
+        Drivers/BSP/Components/lan8742/lan8742.c)
 
 # Add STM32CubeMX generated sources
 add_subdirectory(cmake/stm32cubemx)
@@ -66,6 +67,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
         ${CMAKE_SOURCE_DIR}/Drivers/BSP/Components/n25q128a
         ${CMAKE_SOURCE_DIR}/Drivers/BSP/Components/Common
         ${CMAKE_SOURCE_DIR}/Drivers/BSP/Components/wm8994
+        ${CMAKE_SOURCE_DIR}/Drivers/BSP/Components/lan8742
         ${CMAKE_SOURCE_DIR}/Drivers/STM32746G-Discovery
 )
 

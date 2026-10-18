@@ -106,6 +106,7 @@ SDRAM_HandleTypeDef hsdram1;
 
 osThreadId defaultTaskHandle;
 osThreadId TouchGFXTaskHandle;
+osThreadId SyncTaskHandle;
 /* USER CODE BEGIN PV */
 
 static FMC_SDRAM_CommandTypeDef Command;
@@ -129,6 +130,7 @@ static void MX_USART1_UART_Init(void);
 static void MX_LTDC_Init(void);
 void StartDefaultTask(void const * argument);
 extern void TouchGFX_Task(void const * argument);
+void Sync_Task(void const * argument) {};
 
 /* USER CODE BEGIN PFP */
 
@@ -227,6 +229,10 @@ int main(void)
   /* definition and creation of TouchGFXTask */
   osThreadDef(TouchGFXTask, TouchGFX_Task, osPriorityAboveNormal, 0, 8192);
   TouchGFXTaskHandle = osThreadCreate(osThread(TouchGFXTask), NULL);
+
+  /* definition and creation of SyncTask */
+  osThreadDef(SyncTask, Sync_Task, osPriorityHigh, 0, 1024);
+  SyncTaskHandle = osThreadCreate(osThread(SyncTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -993,8 +999,8 @@ void MPU_Config(void)
   MPU_InitStruct.BaseAddress = 0x2004C000;
   MPU_InitStruct.Size = MPU_REGION_SIZE_16KB;
   MPU_InitStruct.SubRegionDisable = 0x0;
+  MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL1;
   MPU_InitStruct.AccessPermission = MPU_REGION_FULL_ACCESS;
-  MPU_InitStruct.IsBufferable = MPU_ACCESS_BUFFERABLE;
 
   HAL_MPU_ConfigRegion(&MPU_InitStruct);
 
@@ -1003,9 +1009,9 @@ void MPU_Config(void)
   MPU_InitStruct.Number = MPU_REGION_NUMBER2;
   MPU_InitStruct.BaseAddress = 0xC0000000;
   MPU_InitStruct.Size = MPU_REGION_SIZE_8MB;
+  MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL0;
   MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;
   MPU_InitStruct.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
-  MPU_InitStruct.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
 
   HAL_MPU_ConfigRegion(&MPU_InitStruct);
   /* Enables the MPU */
@@ -1024,6 +1030,11 @@ void MPU_Config(void)
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   /* USER CODE BEGIN Callback 0 */
+
+  if (htim->Instance == TIM2)
+  {
+    // todo: SyncPps_OnPeriodElapsed
+  }
 
   /* USER CODE END Callback 0 */
   if (htim->Instance == TIM6)
