@@ -1,0 +1,38 @@
+# CMake / CLion build output
+/build/
+/cmake-build-*/
+
+# TouchGFX Designer generated files and build output
+/TouchGFX/build/
+/TouchGFX/generated/
+/cmake/touchgfx/
+
+# HAL Driver and Libraries
+/Drivers/CMSIS/
+/Drivers/STM32F7xx_HAL_Driver/
+/Middlewares/Third_Party/FreeRTOS/
+/Middlewares/ST/touchgfx/
+
+# Local IDE settings
+/.idea/
+.vs/
+*.vcxproj.user
+*.suo
+/CMakeUserPresets.json
+/compile_commands.json
+/.cache/
+
+# Compiler output outside build directories
+*.o
+*.obj
+*.d
+*.su
+*.elf
+*.map
+
+# OS / editor temporary files
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*~
