@@ -7,3 +7,6 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
 )
+
+# Model.cpp can consume TimeSync/time_sync.h without generated CMake changes.
+target_include_directories(TouchGFX PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

@@ -25,7 +25,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
-#include "sync_app.h"
+#include "app.h"
+#include "sync_pps.h"
 
 /* USER CODE END Includes */
 
@@ -628,7 +629,7 @@ static void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 0;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 108000-1;
+  htim2.Init.Period = 108000;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -889,6 +890,11 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
+void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
+{
+    SyncPps_OnPulseFinished(htim);
+}
+
 // Read manufacturer ID of external QSPI flash
 void GetManufacturerId(uint8_t *manufacturer_id)
 {
@@ -965,6 +971,7 @@ void StartDefaultTask(void const * argument)
   /* Infinite loop */
   for(;;)
   {
+    App_BackgroundPoll();
     osDelay(1);
   }
   /* USER CODE END 5 */
@@ -1035,7 +1042,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
   if (htim->Instance == TIM2)
   {
-    // todo: SyncPps_OnPeriodElapsed
+    SyncPps_OnPeriodElapsed(htim);
   }
 
   /* USER CODE END Callback 0 */
