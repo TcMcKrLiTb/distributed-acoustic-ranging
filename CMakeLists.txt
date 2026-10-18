@@ -49,6 +49,9 @@ add_subdirectory(cmake/stm32cubemx)
 # Add touchgfx generated sources and libraries
 add_subdirectory(cmake/touchgfx)
 
+# Add application sources
+add_subdirectory(App)
+
 # Link directories setup
 target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user defined library search paths

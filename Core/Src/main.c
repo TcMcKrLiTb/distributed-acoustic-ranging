@@ -25,6 +25,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+#include "sync_app.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -130,7 +132,7 @@ static void MX_USART1_UART_Init(void);
 static void MX_LTDC_Init(void);
 void StartDefaultTask(void const * argument);
 extern void TouchGFX_Task(void const * argument);
-void Sync_Task(void const * argument) {};
+extern void Sync_Task(void const * argument);
 
 /* USER CODE BEGIN PFP */
 
