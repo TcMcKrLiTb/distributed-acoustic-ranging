@@ -35,7 +35,12 @@ enable_language(C CXX ASM)
 
 # Create an executable object type
 add_executable(${CMAKE_PROJECT_NAME}
-        TouchGFX/target/CortexMMCUInstrumentation.cpp)
+        TouchGFX/target/CortexMMCUInstrumentation.cpp
+        Drivers/BSP/Components/wm8994/wm8994.c
+        Drivers/BSP/Components/ft5336/ft5336.c
+        Drivers/STM32746G-Discovery/stm32746g_discovery.c
+#        Drivers/STM32746G-Discovery/stm32746g_discovery_audio.c
+        Drivers/STM32746G-Discovery/stm32746g_discovery_ts.c)
 
 # Add STM32CubeMX generated sources
 add_subdirectory(cmake/stm32cubemx)
@@ -56,6 +61,12 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
 # Add include paths
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user defined include paths
+
+        ${CMAKE_SOURCE_DIR}/Drivers/BSP/Components/ft5336
+        ${CMAKE_SOURCE_DIR}/Drivers/BSP/Components/n25q128a
+        ${CMAKE_SOURCE_DIR}/Drivers/BSP/Components/Common
+        ${CMAKE_SOURCE_DIR}/Drivers/BSP/Components/wm8994
+        ${CMAKE_SOURCE_DIR}/Drivers/STM32746G-Discovery
 )
 
 # Add project symbols (macros)
