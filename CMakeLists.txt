@@ -46,6 +46,11 @@ add_executable(${CMAKE_PROJECT_NAME}
 # Add STM32CubeMX generated sources
 add_subdirectory(cmake/stm32cubemx)
 
+# Add PTP code into project by use compiling macro
+target_compile_definitions(stm32cubemx INTERFACE
+    HAL_ETH_USE_PTP
+)
+
 # Add touchgfx generated sources and libraries
 add_subdirectory(cmake/touchgfx)
 
