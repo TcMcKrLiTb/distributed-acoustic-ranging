@@ -27,6 +27,8 @@ public:
 
     virtual ~screenPresenter() {}
 
+    void toggleGpio();
+
 private:
     screenPresenter();
 

@@ -11,6 +11,8 @@ public:
     virtual ~screenView() {}
     virtual void setupScreen();
     virtual void tearDownScreen();
+
+    void button1Clicked() override;
 protected:
 };
 

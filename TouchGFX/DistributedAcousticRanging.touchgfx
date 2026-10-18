@@ -16,7 +16,19 @@
             "Preset": "alternate_theme\\presets\\button\\regular\\height_36\\tiny_rounded_active.json"
           }
         ],
-        "Interactions": []
+        "Interactions": [
+          {
+            "InteractionName": "Interaction1",
+            "Trigger": {
+              "Type": "TriggerClicked",
+              "TriggerComponent": "button1"
+            },
+            "Action": {
+              "Type": "ActionCustom",
+              "FunctionName": "button1Clicked"
+            }
+          }
+        ]
       }
     ],
     "CustomContainerDefinitions": [],

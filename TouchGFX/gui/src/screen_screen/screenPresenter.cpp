@@ -16,3 +16,8 @@ void screenPresenter::deactivate()
 {
 
 }
+
+void screenPresenter::toggleGpio()
+{
+    model->toggleGpio();
+}

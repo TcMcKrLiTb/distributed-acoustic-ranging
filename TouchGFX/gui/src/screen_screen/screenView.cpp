@@ -14,3 +14,8 @@ void screenView::tearDownScreen()
 {
     screenViewBase::tearDownScreen();
 }
+
+void screenView::button1Clicked()
+{
+    presenter->toggleGpio();
+}

@@ -14,6 +14,8 @@ public:
     }
 
     void tick();
+    
+    void toggleGpio();
 protected:
     ModelListener* modelListener;
 };
