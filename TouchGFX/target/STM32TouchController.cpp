@@ -24,12 +24,21 @@
 
 #include <STM32TouchController.hpp>
 
+#include "ft5336.h"
+#include <stm32746g_discovery_ts.h>
+
+static TS_DrvTypeDef *tsDriver;
+extern I2C_HandleTypeDef hi2c3;
+static TS_StateTypeDef TS_State;
+
 void STM32TouchController::init()
 {
     /**
      * Initialize touch controller and driver
      *
-     */
+    */
+    BSP_TS_Init(480, 272);
+    tsDriver = &ft5336_ts_drv;
 }
 
 bool STM32TouchController::sampleTouch(int32_t& x, int32_t& y)
@@ -43,7 +52,18 @@ bool STM32TouchController::sampleTouch(int32_t& x, int32_t& y)
      * This function is called by the TouchGFX framework.
      * By default sampleTouch is called every tick, this can be adjusted by HAL::setTouchSampleRate(int8_t);
      *
-     */
+    */
+    if (tsDriver)
+    {
+        BSP_TS_GetState(&TS_State);
+        if (TS_State.touchDetected == 1)
+        {
+            /* Get each touch coordinates */
+            x = TS_State.touchX[0];
+            y = TS_State.touchY[0];
+            return true;
+        }
+    }
     return false;
 }
 

@@ -151,6 +151,9 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
 
+  /* 调试暂停 CPU 时，同时暂停 TIM6 */
+  __HAL_DBGMCU_FREEZE_TIM6();
+
   /* USER CODE END 1 */
 
   /* MPU Configuration--------------------------------------------------------*/
