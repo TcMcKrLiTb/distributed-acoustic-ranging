@@ -13,7 +13,7 @@
 | `sync_app.c/.h` | 主从选举、协议状态机、会话重启/超时、状态汇总；仅由同步任务调用 |
 | `sync_task.c` | CMSIS-RTOS 任务入口、每轮休眠、跨任务状态快照 |
 | `time_sync.h` | 提供给其他应用和 TouchGFX Model 的 C/C++ 接口 |
-| `Port/sync_port_stm32.c` | LAN8742、裸以太网收发、硬件时间戳、PTP 时钟调整、LED |
+| `Port/sync_port_stm32.c` | LAN8742、裸以太网收发、硬件时间戳、PTP 时钟调整 |
 | `Port/sync_pps_stm32.c` | TIM2 单脉冲、整秒目标装载、相位跳变后的重装、漏触发恢复 |
 | `Port/sync_log.c` | 静态日志队列；同步任务投递，defaultTask 输出 UART |
 | `sync_hw.h` | 适配当前由 `main.c` 定义的外设句柄 |
@@ -61,7 +61,8 @@ OPM/URS 在 PPS 初始化中显式设置，无需为此切换 CubeMX 的 PWM 通
   当前 Debug/Release 均使用 12960 字节，终点为 `0x2004F2A0`（不含），
   剩余 3424 字节。TouchGFX 帧缓冲仍在 SDRAM，资源仍在 QSPI。
 - UART1 当前为 **1152000、8N1**，TX=PA9，RX=PB7。
-- 板载 LED1 使用当前 `main.h` 定义的 PI1；锁定估计时常亮，其余状态闪烁。
+- 板载 LED1（PI1）由现有 TouchGFX 按钮控制。同步模块的可选 LED hook 留空，
+  避免每轮写 GPIO 覆盖按钮的 toggle；同步状态通过日志和 `TimeSync_GetStatus()` 读取。
 
 CubeMX 再生成代码后保留 USER CODE 区，并检查上述参数、根 CMake 的 PTP 宏和
 自定义链接脚本中的 ETHRAM/SDRAM/QSPI 段。无需将移植代码放回生成的 Core 文件。

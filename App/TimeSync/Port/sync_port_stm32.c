@@ -235,6 +235,7 @@ void SyncPort_Log(const char *text) {
     SyncLog_Write(text);
 }
 void SyncPort_Led(bool locked) {
-    bool on=locked || ((HAL_GetTick()/250U)&1U);
-    HAL_GPIO_WritePin(LED1_GPIO_Port,LED1_Pin,on ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    /* LED1 belongs to the TouchGFX button. Keep this optional status hook from
+       overwriting the user's toggle; sync status is available via the API/log. */
+    (void)locked;
 }
