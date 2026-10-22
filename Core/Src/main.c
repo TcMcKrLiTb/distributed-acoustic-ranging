@@ -220,6 +220,8 @@ int main(void)
   MX_TouchGFX_PreOSInit();
   /* USER CODE BEGIN 2 */
 
+  App_Init();
+  
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN RTOS_MUTEX */

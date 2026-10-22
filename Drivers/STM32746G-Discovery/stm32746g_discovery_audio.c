@@ -486,19 +486,12 @@ void HAL_SAI_TxHalfCpltCallback(SAI_HandleTypeDef *hsai)
   */
 void HAL_SAI_ErrorCallback(SAI_HandleTypeDef *hsai)
 {
-  HAL_SAI_StateTypeDef audio_out_state;
-  HAL_SAI_StateTypeDef audio_in_state;
-
-  audio_out_state = HAL_SAI_GetState(&haudio_out_sai);
-  audio_in_state = HAL_SAI_GetState(&haudio_in_sai);
-
-  /* Determines if it is an audio out or audio in error */
-  if ((audio_out_state == HAL_SAI_STATE_BUSY) || (audio_out_state == HAL_SAI_STATE_BUSY_TX))
+  if (hsai->Instance == AUDIO_OUT_SAIx)
   {
     BSP_AUDIO_OUT_Error_CallBack();
   }
 
-  if ((audio_in_state == HAL_SAI_STATE_BUSY) || (audio_in_state == HAL_SAI_STATE_BUSY_RX))
+  if (hsai->Instance == AUDIO_IN_SAIx)
   {
     BSP_AUDIO_IN_Error_CallBack();
   }

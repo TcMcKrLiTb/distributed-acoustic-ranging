@@ -7,6 +7,8 @@ extern "C" {
 
 void App_BackgroundPoll(void);
 
+void App_Init(void);
+
 #ifdef __cplusplus
 }
 #endif

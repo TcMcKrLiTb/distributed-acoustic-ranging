@@ -67,6 +67,9 @@ extern TIM_HandleTypeDef htim6;
 
 /* USER CODE BEGIN EV */
 
+extern SAI_HandleTypeDef haudio_out_sai;
+extern SAI_HandleTypeDef haudio_in_sai;
+
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -271,6 +274,14 @@ void LTDC_IRQHandler(void)
 void SAI2_IRQHandler(void)
 {
   /* USER CODE BEGIN SAI2_IRQn 0 */
+
+  if (haudio_out_sai.Instance == SAI2_Block_A &&
+      haudio_in_sai.Instance == SAI2_Block_B)
+  {
+    HAL_SAI_IRQHandler(&haudio_out_sai);
+    HAL_SAI_IRQHandler(&haudio_in_sai);
+    return;
+  }
 
   /* USER CODE END SAI2_IRQn 0 */
   HAL_SAI_IRQHandler(&hsai_BlockA2);
