@@ -32,8 +32,6 @@ typedef struct {
 static StaticQueue_t queue_control;
 static uint8_t queue_storage[QUEUE_DEPTH * sizeof(AudioBlock)];
 static QueueHandle_t blocks;
-static StaticTask_t task_control;
-static StackType_t task_stack[1536];
 static AudioBlock irq_block, task_block;
 static ArrivalDetector detector;
 static AudioArrivalEvent latest;
