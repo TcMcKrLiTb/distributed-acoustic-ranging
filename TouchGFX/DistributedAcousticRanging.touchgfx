@@ -5,10 +5,21 @@
         "Name": "screen",
         "Components": [
           {
+            "Type": "Box",
+            "Name": "box1",
+            "Width": 480,
+            "Height": 272,
+            "Color": {
+              "Red": 255,
+              "Green": 255,
+              "Blue": 255
+            }
+          },
+          {
             "Type": "Button",
             "Name": "button1",
-            "X": 90,
-            "Y": 47,
+            "X": 190,
+            "Y": 118,
             "Width": 100,
             "Height": 36,
             "Pressed": "__generated\\alternate_theme_images_widgets_button_regular_height_36_tiny_rounded_pressed.png",

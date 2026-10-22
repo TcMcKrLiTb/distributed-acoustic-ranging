@@ -39,7 +39,7 @@ add_executable(${CMAKE_PROJECT_NAME}
         Drivers/BSP/Components/wm8994/wm8994.c
         Drivers/BSP/Components/ft5336/ft5336.c
         Drivers/STM32746G-Discovery/stm32746g_discovery.c
-#        Drivers/STM32746G-Discovery/stm32746g_discovery_audio.c
+        Drivers/STM32746G-Discovery/stm32746g_discovery_audio.c
         Drivers/STM32746G-Discovery/stm32746g_discovery_ts.c
         Drivers/BSP/Components/lan8742/lan8742.c)
 

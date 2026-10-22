@@ -55,9 +55,10 @@ ENTRY(Reset_Handler)
 /* Specify the memory areas */
 MEMORY
 {
-RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 304K
-FLASH (rx)      : ORIGIN = 0x8000000, LENGTH = 1024K
+RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 300K
+AUDIORAM (rw)  : ORIGIN = 0x2004B000, LENGTH = 4K
 ETHRAM (xrw) : ORIGIN = 0x2004C000, LENGTH = 16K
+FLASH (rx)      : ORIGIN = 0x8000000, LENGTH = 1024K
 QSPI (r)    : ORIGIN = 0x90000000, LENGTH = 16M
 SDRAM   (xrw)  : ORIGIN = 0xC0000000, LENGTH = 8M
 }
@@ -257,6 +258,13 @@ SECTIONS
     *(.TxDecripSection) . = ALIGN(32);
     *(.eth_dma) . = ALIGN(32);
   } >ETHRAM
+
+  .audio_dma (NOLOAD) :
+  {
+    . = ALIGN(32);
+    *(.audio_dma)
+    . = ALIGN(32);
+  } >AUDIORAM
 
   BufferSection (NOLOAD) :
   {
