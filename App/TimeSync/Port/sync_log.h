@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 void SyncLog_Init(void);
-/* Single producer: the sync task. Full queue drops the message without waiting. */
+/* Task-context producers (sync/audio). Full queue drops without waiting. */
 void SyncLog_Write(const char *text);
 /* Single consumer: the default task. */
 void SyncLog_Poll(void);

@@ -45,6 +45,9 @@ bool TimeSync_GetStatus(TimeSyncStatus *status);
 /* Local PTP time; readiness does not imply synchronization with another board.
    The time can jump during initial acquisition. Task context only. */
 bool TimeSync_NowNs(uint64_t *time_ns);
+/* IRQ-safe clock capture, no RTOS calls. Generation changes on phase steps.
+   Used to timestamp DMA progress, not a claim that the clock is synchronized. */
+bool TimeSync_CaptureClockFromISR(uint64_t *time_ns, uint32_t *generation);
 /* Single consumer: call from the default task, never from the sync task/ISR. */
 void TimeSync_ProcessLogs(void);
 

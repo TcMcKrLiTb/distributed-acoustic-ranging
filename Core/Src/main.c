@@ -27,6 +27,7 @@
 
 #include "app.h"
 #include "sync_pps.h"
+#include "audio_arrival.h"
 
 /* USER CODE END Includes */
 
@@ -142,7 +143,7 @@ static void MX_SAI2_Init(void);
 void StartDefaultTask(void const * argument);
 extern void TouchGFX_Task(void const * argument);
 extern void Sync_Task(void const * argument);
-void audio_task(void const * argument){while (1){}}
+extern void audio_task(void const * argument);
 
 /* USER CODE BEGIN PFP */
 

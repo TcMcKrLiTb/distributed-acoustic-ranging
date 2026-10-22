@@ -19,6 +19,8 @@ static uint8_t tx_frame[96] DMA_MEMORY;
 static uint8_t local_mac[6];
 static lan8742_Object_t phy;
 static bool running, tx_pending, ptp_ready;
+static volatile bool phase_update;
+static volatile uint32_t phase_generation;
 static uint32_t tx_index, phy_poll_ms, base_addend;
 static int32_t link_state, correction_ppb;
 
@@ -43,6 +45,21 @@ uint64_t SyncPort_Time(void) {
     do { s1=ETH->PTPTSHR; ns=ETH->PTPTSLR; s2=ETH->PTPTSHR; } while(s1!=s2);
     return (uint64_t)s1*1000000000ULL+ns;
 }
+bool SyncPort_CaptureClock(uint64_t *time_ns, uint32_t *generation) {
+    if (!ptp_ready || phase_update) return false;
+    for (unsigned retry = 0; retry < 3; retry++) {
+        uint32_t epoch = phase_generation;
+        uint32_t s1 = ETH->PTPTSHR, ns = ETH->PTPTSLR, s2 = ETH->PTPTSHR;
+        if (s1 == s2 && ns < 1000000000U && !phase_update &&
+            epoch == phase_generation &&
+            !(ETH->PTPTSCR & (ETH_PTPTSCR_TSSTU | ETH_PTPTSCR_TSSTI))) {
+            *time_ns = (uint64_t)s1 * 1000000000ULL + ns;
+            *generation = epoch;
+            return true;
+        }
+    }
+    return false;
+}
 static bool ptp_init(void) {
     base_addend=(uint32_t)(((1ULL<<32)*50000000ULL)/HAL_RCC_GetHCLKFreq());
     ETH->PTPTSCR=ETH_PTPTSCR_TSE|ETH_PTPTSCR_TSFCU|ETH_PTPTSCR_TSSSR|ETH_PTPTSCR_TSSARFE;
@@ -62,6 +79,9 @@ bool SyncPort_Correct(int64_t phase_ns,int32_t frequency_ppb) {
     if(!ptp_ready) return true;
     if(frequency_ppb>SYNC_MAX_FREQ_PPB || frequency_ppb<-SYNC_MAX_FREQ_PPB) return false;
     if(phase_ns) {
+        phase_update=true;
+        phase_generation++;
+        __DMB();
         uint64_t amount=(uint64_t)(phase_ns<0 ? -phase_ns : phase_ns);
         uint32_t seconds=(uint32_t)(amount/1000000000ULL), ns=(uint32_t)(amount%1000000000ULL);
         if(!ptp_wait(ETH_PTPTSCR_TSSTU|ETH_PTPTSCR_TSSTI)) return false;
@@ -82,7 +102,11 @@ bool SyncPort_Correct(int64_t phase_ns,int32_t frequency_ppb) {
         if(!ptp_wait(ETH_PTPTSCR_TSARU)) return false;
         correction_ppb=frequency_ppb;
     }
-    if(phase_ns) SyncPps_Rearm();
+    if(phase_ns) {
+        SyncPps_Rearm();
+        __DMB();
+        phase_update=false;
+    }
     return true;
 }
 void SyncPort_PpsPoll(void) {

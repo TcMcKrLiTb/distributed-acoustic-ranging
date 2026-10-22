@@ -14,4 +14,7 @@ void SyncPps_OnPulseFinished(TIM_HandleTypeDef *timer);
 void SyncPps_OnPeriodElapsed(TIM_HandleTypeDef *timer);
 void SyncPps_Stats(uint32_t *rises, uint32_t *falls, uint32_t *high_seen,
                    uint32_t *low_seen, uint32_t *missed);
+
+void Sync_Task(void const *argument);
+
 #endif

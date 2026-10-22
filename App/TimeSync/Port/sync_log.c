@@ -29,7 +29,11 @@ void SyncLog_Write(const char *text) {
     while (message.length < LOG_LENGTH - 1U && text[message.length])
         message.length++;
     memcpy(message.text, text, message.length);
-    if (!log_queue || xQueueSend(log_queue, &message, 0) != pdPASS) dropped++;
+    if (!log_queue || xQueueSend(log_queue, &message, 0) != pdPASS) {
+        taskENTER_CRITICAL();
+        dropped++;
+        taskEXIT_CRITICAL();
+    }
 }
 
 void SyncLog_Poll(void) {

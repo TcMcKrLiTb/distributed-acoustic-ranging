@@ -21,6 +21,8 @@ void SyncPort_PpsPoll(void);
 void SyncPort_PpsStats(uint32_t *rises,uint32_t *falls,uint32_t *high_seen,uint32_t *low_seen,
                        uint32_t *missed);
 uint64_t SyncPort_Time(void);
+/* Bounded, read-only capture; false while a PTP phase update is in progress. */
+bool SyncPort_CaptureClock(uint64_t *time_ns, uint32_t *generation);
 uint32_t SyncPort_Millis(void);
 uint32_t SyncPort_Session(void);
 void SyncPort_Log(const char *text);

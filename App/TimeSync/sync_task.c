@@ -49,6 +49,11 @@ bool TimeSync_NowNs(uint64_t *time_ns) {
     return ready;
 }
 
+bool TimeSync_CaptureClockFromISR(uint64_t *time_ns, uint32_t *generation) {
+    if (!time_ns || !generation || !published_valid || !published.ready) return false;
+    return SyncPort_CaptureClock(time_ns, generation);
+}
+
 void TimeSync_ProcessLogs(void) {
     SyncLog_Poll();
 }
