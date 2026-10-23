@@ -91,13 +91,19 @@ static void acknowledge(uint32_t sequence) {
     ack.sequence = sequence; ack.offset = transferred;
     send_packet(&ack);
 }
-static void reject(const char *reason, RangeError error) {
+static void reject(const char *reason, RangeError error, const RangeEstimate *estimate) {
     RangePacket p = {0}; p.type = RANGE_REJECT;
     p.sequence = link_master ? remote_capture.sequence : local_capture.sequence;
     send_packet(&p);
     status.rejected++; status.last_error = error;
     char line[128];
-    snprintf(line, sizeof(line), "RANGE REJECT reason=%s error=%u\r\n", reason, (unsigned)error);
+    if (estimate && estimate->correlation_valid) {
+        snprintf(line, sizeof(line), "RANGE REJECT reason=%s error=%u quality=%" PRIu32
+                 " lag=%" PRId32 "\r\n", reason, (unsigned)error,
+                 estimate->quality_permille, estimate->peak_lag_samples);
+    } else {
+        snprintf(line, sizeof(line), "RANGE REJECT reason=%s error=%u\r\n", reason, (unsigned)error);
+    }
     SyncLog_Write(line);
     reset_transaction();
 }
@@ -213,7 +219,7 @@ void Ranging_Poll(void) {
         if (discard_job || !link_locked || !clock_ok || generation != active_generation || stage != DSP) {
             discard_job = false; reset_transaction();
         } else if (!job_success) {
-            reject("quality_or_range", job_result.error);
+            reject("quality_or_range", job_result.error, &job_result);
         } else {
             memset(&result_packet, 0, sizeof(result_packet));
             result_packet.type = RANGE_RESULT; result_packet.sequence = ++next_result_id;
@@ -246,7 +252,7 @@ void Ranging_Poll(void) {
         }
     }
     if ((local_valid || remote_valid) && ms - started_ms > TRANSACTION_MS && stage != RESULT_TX && stage != DISPLAY_WAIT) {
-        reject("timeout_or_unpaired", RANGE_BAD_CAPTURE);
+        reject("timeout_or_unpaired", RANGE_BAD_CAPTURE, NULL);
     }
     if (ms - sent_ms >= RETRY_MS) {
         if (stage == META_TX) {
@@ -265,7 +271,7 @@ void Ranging_Poll(void) {
     }
     if ((stage == RESULT_TX || stage == DISPLAY_WAIT) && now >= result_packet.apply_ns) {
         if (stage == DISPLAY_WAIT || result_acked) display_result();
-        else reject("result_ack_timeout", RANGE_BAD_CAPTURE);
+        else reject("result_ack_timeout", RANGE_BAD_CAPTURE, NULL);
     }
     publish();
 }

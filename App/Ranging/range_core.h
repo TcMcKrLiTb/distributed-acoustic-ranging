@@ -36,6 +36,9 @@ typedef enum {
 typedef struct {
     int64_t raw_delay_ns, delay_ns;
     uint32_t distance_mm, quality_permille;
+    /* Diagnostic peak before fractional interpolation; valid after full search. */
+    int32_t peak_lag_samples;
+    bool correlation_valid;
     bool source_a;
     RangeError error;
 } RangeEstimate;

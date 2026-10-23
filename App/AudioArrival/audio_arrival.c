@@ -191,9 +191,10 @@ static void emit_event(const ArrivalDetection *onset, const AudioBlock *block,
              event.clipped ? 1U : 0U, interval_text);
 #else
     snprintf(line, sizeof(line), "AUDIO EVENT seq=%" PRIu32 " arrival=%" PRIu32 ".%09" PRIu32
-             " interval=%s peak=%" PRIu32 " sync=%s%s\r\n",
+             " interval=%s peak=%" PRIu32 " noise=%" PRIu32 " threshold=%" PRIu32 " sync=%s%s\r\n",
              event.sequence, (uint32_t)(event.time_ns / 1000000000ULL),
              (uint32_t)(event.time_ns % 1000000000ULL), interval_text, event.peak,
+             event.noise, event.threshold,
              synchronized ? "LOCKED" : "LOCAL", event.clipped ? " clipped=1" : "");
 #endif
     SyncLog_Write(line);

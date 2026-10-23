@@ -66,6 +66,8 @@ bool Range_Estimate(const RangeCapture *a, const RangeCapture *b,
         if (score > best) { best = score; peak = k; }
     }
     r->quality_permille = best > 0.0f ? (uint32_t)(fminf(best, 1.0f) * 1000.0f + 0.5f) : 0;
+    r->peak_lag_samples = peak;
+    r->correlation_valid = true;
     if (best < 0.65f) { r->error = RANGE_LOW_CORRELATION; return false; }
     if (peak == -RANGE_SEARCH_SAMPLES || peak == RANGE_SEARCH_SAMPLES) {
         r->error = RANGE_AMBIGUOUS; return false;
