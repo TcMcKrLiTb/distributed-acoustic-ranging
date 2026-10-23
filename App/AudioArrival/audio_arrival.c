@@ -2,6 +2,8 @@
 #include "main.h"
 #include "arrival_detector.h"
 #include "arrival_time.h"
+#include "arrival_clock.h"
+#include "Ranging/range_recorder.h"
 #include "TimeSync/time_sync.h"
 #include "TimeSync/Port/sync_log.h"
 #include "stm32746g_discovery_audio.h"
@@ -41,6 +43,36 @@ static uint32_t previous_generation;
 static volatile uint32_t irq_blocks, dropped_blocks, hardware_errors, timing_errors;
 static volatile uint32_t clock_skips;
 static volatile bool stream_fault;
+
+static RangeRecorder recorder;
+static ArrivalClock sample_clock;
+static uint64_t mapped_period_ps;
+static RangeCapture captures[2];
+/* AudioTask writes outside the critical section; consumer claims before copying. */
+enum { CAP_FREE, CAP_WRITING, CAP_READY, CAP_READING };
+static uint8_t capture_states[2];
+
+static void reset_recorder(void) {
+    RangeRecorder_Reset(&recorder);
+    ArrivalClock_Reset(&sample_clock);
+    taskENTER_CRITICAL();
+    for (unsigned i = 0; i < 2; ++i)
+        if (capture_states[i] == CAP_READY) capture_states[i] = CAP_FREE;
+    taskEXIT_CRITICAL();
+}
+static void finish_capture(void) {
+    if (!RangeRecorder_Ready(&recorder)) return;
+    int slot = -1;
+    taskENTER_CRITICAL();
+    for (unsigned i = 0; i < 2; ++i)
+        if (capture_states[i] == CAP_FREE) { slot = (int)i; capture_states[i] = CAP_WRITING; break; }
+    taskEXIT_CRITICAL();
+    if (slot < 0) { recorder.pending = false; return; }
+    bool copied = RangeRecorder_Copy(&recorder, &captures[slot]);
+    taskENTER_CRITICAL();
+    capture_states[slot] = copied ? CAP_READY : CAP_FREE;
+    taskEXIT_CRITICAL();
+}
 
 static void receive_half(unsigned half) {
     uint64_t now = 0;
@@ -122,7 +154,7 @@ static void emit_event(const ArrivalDetection *onset, const AudioBlock *block,
     if (!TimeSync_CaptureClockFromISR(&now, &generation) ||
         generation != block->generation ||
         !ArrivalTime_At(block->last_ns, (int64_t)onset->sample - (int64_t)block->first_sample,
-                        onset->fraction_q16, sample_period_ps, &timestamp) ||
+                        onset->fraction_q16, mapped_period_ps, &timestamp) ||
         timestamp < INPUT_DELAY_NS) return;
     TimeSyncStatus sync;
     bool synchronized = TimeSync_GetStatus(&sync) && sync.locked;
@@ -138,6 +170,10 @@ static void emit_event(const ArrivalDetection *onset, const AudioBlock *block,
     taskENTER_CRITICAL();
     latest = event; latest_valid = true;
     taskEXIT_CRITICAL();
+    if (event.synchronized)
+        RangeRecorder_Arm(&recorder, event.sequence, generation, onset->sample,
+                          onset->fraction_q16, event.time_ns, mapped_period_ps,
+                          RANGE_CAPTURE_LOCKED | (event.clipped ? RANGE_CAPTURE_CLIPPED : 0U));
     char interval_text[32] = "NA";
     if (event.interval_valid) {
         snprintf(interval_text, sizeof(interval_text), "%" PRIu32 ".%09" PRIu32,
@@ -181,12 +217,18 @@ void audio_task(void const *argument) {
             if (!TimeSync_CaptureClockFromISR(&now, &generation) ||
                 generation != task_block.generation) {
                 ArrivalDetector_Reset(&detector);
+                reset_recorder();
                 continue;
             }
             if (!task_block.continuous || active_generation != task_block.generation ||
-                expected_sample != task_block.first_sample) ArrivalDetector_Reset(&detector);
+                expected_sample != task_block.first_sample) {
+                ArrivalDetector_Reset(&detector);
+                reset_recorder();
+            }
             active_generation = task_block.generation;
             expected_sample = task_block.first_sample + ARRIVAL_BLOCK_FRAMES;
+            ArrivalClock_Push(&sample_clock, task_block.last_ns, sample_period_ps,
+                              &task_block.last_ns, &mapped_period_ps);
             bool clipped = false;
             for (unsigned i = 0; i < ARRIVAL_BLOCK_FRAMES; i++) {
                 int32_t value = task_block.pcm[i];
@@ -194,10 +236,12 @@ void audio_task(void const *argument) {
                 if (magnitude > peak) peak = magnitude;
                 if (magnitude >= 32760U) { clipped = true; clip_count++; }
                 ArrivalDetection onset;
+                RangeRecorder_Push(&recorder, task_block.first_sample + i, (int16_t)value);
                 if (ArrivalDetector_Push(&detector, (int16_t)value,
                                           task_block.first_sample + i, &onset))
                     emit_event(&onset, &task_block, clipped);
             }
+            finish_capture();
         }
         if (stream_fault || xTaskGetTickCount() - last_receive > pdMS_TO_TICKS(100)) {
             SyncLog_Write("AUDIO RECOVER: RX stalled/error; discard onset and restart DMA\r\n");
@@ -206,6 +250,7 @@ void audio_task(void const *argument) {
                 vTaskSuspend(NULL);
             }
             ArrivalDetector_Reset(&detector);
+            reset_recorder();
             active_generation = UINT32_MAX;
             last_receive = xTaskGetTickCount();
         }
@@ -252,4 +297,24 @@ bool AudioArrival_GetLatest(AudioArrivalEvent *event) {
     bool valid = latest_valid;
     taskEXIT_CRITICAL();
     return valid;
+}
+
+bool AudioArrival_TakeCapture(RangeCapture *capture) {
+    if (!capture) return false;
+    int slot = -1;
+    taskENTER_CRITICAL();
+    for (unsigned i = 0; i < 2; ++i) {
+        if (capture_states[i] == CAP_READY &&
+            (slot < 0 || (int32_t)(captures[i].sequence - captures[slot].sequence) > 0)) slot = (int)i;
+    }
+    if (slot >= 0) {
+        capture_states[slot] = CAP_READING;
+        for (unsigned i = 0; i < 2; ++i)
+            if ((int)i != slot && capture_states[i] == CAP_READY) capture_states[i] = CAP_FREE;
+    }
+    taskEXIT_CRITICAL();
+    if (slot < 0) return false;
+    *capture = captures[slot];
+    taskENTER_CRITICAL(); capture_states[slot] = CAP_FREE; taskEXIT_CRITICAL();
+    return true;
 }

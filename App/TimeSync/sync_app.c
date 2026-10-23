@@ -2,6 +2,7 @@
 #include "sync_core.h"
 #include "sync_port.h"
 #include "sync_format.h"
+#include "Ranging/ranging.h"
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
@@ -42,6 +43,11 @@ static void clear_peer(void) {
     if(!SyncPort_Correct(0,0)) app.ready=false;
 }
 static void receive(const SyncRxPacket *p, uint32_t now) {
+    if (Range_IsPacket(p->payload)) {
+        if (app.peer && memcmp(p->source_mac, app.peer_mac, 6) == 0)
+            Ranging_Receive(p->payload);
+        return;
+    }
     SyncMessage m;
     if(!Sync_Decode(&m,p->payload,SYNC_WIRE_SIZE) || !memcmp(m.uid,app.uid,12)) return;
     if(m.type==SYNC_HELLO) {
@@ -114,6 +120,9 @@ void SyncApp_Poll(void) {
         if(!app.master && app.servo.valid && now-app.sample_ms>500U) {
             app.servo.valid=false; app.servo.locked=false; app.servo.good_run=0;
         }
+        bool range_locked = app.ready && app.link && app.peer &&
+                            (app.master ? app.peer_locked : app.servo.locked);
+        Ranging_SetLink(app.master, range_locked, app.session, app.peer_session);
         SyncRxPacket p;
         for(unsigned i=0;i<16 && app.link && SyncPort_Receive(&p);i++) receive(&p,now);
         if(app.link && now-app.hello_ms>=500U) {
@@ -130,6 +139,8 @@ void SyncApp_Poll(void) {
     }
     bool locked=app.ready && app.link && app.peer &&
                 (app.master ? app.peer_locked : app.servo.locked);
+    Ranging_SetLink(app.master, locked, app.session, app.peer_session);
+    Ranging_Poll();
     SyncPort_Led(locked);
     if(now-app.log_ms>=1000U) {
         app.log_ms=now; char line[384];
@@ -153,6 +164,13 @@ void SyncApp_Poll(void) {
             rises,falls,high_seen,low_seen,missed);
         SyncPort_Log(line);
     }
+}
+
+bool SyncApp_SendApplication(const uint8_t payload[56]) {
+    if (!app.ready || !app.link || !app.peer) return false;
+    bool ok = SyncPort_Send(app.peer_mac, payload, false, NULL);
+    if (!ok) app.tx_failures++;
+    return ok;
 }
 
 void SyncApp_GetStatus(TimeSyncStatus *status) {

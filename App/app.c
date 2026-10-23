@@ -1,6 +1,7 @@
 #include "app.h"
 #include "TimeSync/time_sync.h"
 #include "AudioArrival/audio_arrival.h"
+#include "Ranging/ranging.h"
 
 /**
   * @brief  Initialize app part
@@ -8,6 +9,7 @@
   */
 void App_Init(void) {
     AudioArrival_Init();
+    Ranging_Init();
 }
 
 void App_BackgroundPoll(void) {

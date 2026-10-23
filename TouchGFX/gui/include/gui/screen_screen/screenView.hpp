@@ -3,6 +3,7 @@
 
 #include <gui_generated/screen_screen/screenViewBase.hpp>
 #include <gui/screen_screen/screenPresenter.hpp>
+#include <gui/common/RangeDisplay.hpp>
 
 class screenView : public screenViewBase
 {
@@ -11,9 +12,11 @@ public:
     virtual ~screenView() {}
     virtual void setupScreen();
     virtual void tearDownScreen();
+    virtual void handleTickEvent();
 
     void button1Clicked() override;
 protected:
+    RangeDisplay rangeDisplay;
 };
 
 #endif // SCREENVIEW_HPP
