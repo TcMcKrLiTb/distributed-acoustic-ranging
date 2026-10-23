@@ -5,10 +5,46 @@
   </Languages>
   <Texts>
     <TextGroup Id="Group1" />
+    <TextGroup Id="Unsorted">
+      <Text Id="__SingleUse_OB8Y" Alignment="Left" TypographyId="Title">
+        <Translation Language="GB">Q 0.0% OK 0 REJECT 0</Translation>
+      </Text>
+      <Text Id="__SingleUse_0T6J" Alignment="Left" TypographyId="Title">
+        <Translation Language="GB">WAIT SYNC ID 0</Translation>
+      </Text>
+      <Text Id="__SingleUse_8SSI" Alignment="Left" TypographyId="Title">
+        <Translation Language="GB">SOURCE -</Translation>
+      </Text>
+      <Text Id="__SingleUse_NB2P" Alignment="Left" TypographyId="Title">
+        <Translation Language="GB">-.--- M</Translation>
+      </Text>
+      <Text Id="__SingleUse_OO4F" Alignment="Left" TypographyId="Title">
+        <Translation Language="GB">BOARD - WAIT SYNC</Translation>
+      </Text>
+      <Text Id="__SingleUse_WW3N" Alignment="Left" TypographyId="Title">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_4RE8" Alignment="Left" TypographyId="Title">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_VOJC" Alignment="Left" TypographyId="Default">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_BQUD" Alignment="Left" TypographyId="Large">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_0GWM" Alignment="Left" TypographyId="Default">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_AU9C" Alignment="Left" TypographyId="Title">
+        <Translation Language="GB">DISTRIBUTED ACOUSTIC RANGING</Translation>
+      </Text>
+    </TextGroup>
   </Texts>
   <Typographies>
-    <Typography Id="Default" Font="verdana.ttf" Size="20" Bpp="4" IsVector="no" Direction="LTR" FallbackCharacter="?" />
-    <Typography Id="Large" Font="verdana.ttf" Size="40" Bpp="4" IsVector="no" Direction="LTR" FallbackCharacter="?" />
+    <Typography Id="Default" Font="verdana.ttf" Size="20" Bpp="4" IsVector="no" Direction="LTR" FallbackCharacter="?" WildcardCharacters="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 .-%" />
+    <Typography Id="Large" Font="verdana.ttf" Size="40" Bpp="4" IsVector="no" Direction="LTR" FallbackCharacter="?" WildcardCharacters="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 .-%" />
     <Typography Id="Small" Font="verdana.ttf" Size="10" Bpp="4" IsVector="no" Direction="LTR" FallbackCharacter="?" />
+    <Typography Id="Title" Font="verdana.ttf" Size="16" Bpp="4" IsVector="no" Direction="LTR" FallbackCharacter="?" WildcardCharacters="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 .-%" />
   </Typographies>
 </TextDatabase>

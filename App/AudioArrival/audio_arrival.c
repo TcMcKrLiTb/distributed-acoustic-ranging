@@ -16,7 +16,7 @@
 
 /* Use the same physical channel on both boards. Never average the two mics. */
 #define MIC_CHANNEL 0U
-#define INPUT_VOLUME 65U
+#define INPUT_VOLUME 80U
 #define QUEUE_DEPTH 6U
 #define INPUT_DELAY_NS 0ULL /* Measured codec/acoustic delay can be calibrated later. */
 
