@@ -181,6 +181,7 @@ static void emit_event(const ArrivalDetection *onset, const AudioBlock *block,
                  (uint32_t)(event.interval_ns % 1000000000ULL));
     }
     char line[256];
+#if APP_LOG_VERBOSE
     snprintf(line, sizeof(line), "AUDIO EVENT seq=%" PRIu32 " arrival=%" PRIu32 ".%09" PRIu32
              " epoch=%" PRIu32 " sample=%" PRIu32 " peak=%" PRIu32
              " noise=%" PRIu32 " threshold=%" PRIu32 " sync=%s clipped=%u interval=%s\r\n",
@@ -188,6 +189,13 @@ static void emit_event(const ArrivalDetection *onset, const AudioBlock *block,
              (uint32_t)(event.time_ns % 1000000000ULL), generation, (uint32_t)onset->sample,
              event.peak, event.noise, event.threshold, synchronized ? "LOCKED" : "LOCAL",
              event.clipped ? 1U : 0U, interval_text);
+#else
+    snprintf(line, sizeof(line), "AUDIO EVENT seq=%" PRIu32 " arrival=%" PRIu32 ".%09" PRIu32
+             " interval=%s peak=%" PRIu32 " sync=%s%s\r\n",
+             event.sequence, (uint32_t)(event.time_ns / 1000000000ULL),
+             (uint32_t)(event.time_ns % 1000000000ULL), interval_text, event.peak,
+             synchronized ? "LOCKED" : "LOCAL", event.clipped ? " clipped=1" : "");
+#endif
     SyncLog_Write(line);
 }
 
@@ -200,7 +208,14 @@ void audio_task(void const *argument) {
     uint64_t now;
     uint32_t generation;
     while (!TimeSync_CaptureClockFromISR(&now, &generation)) vTaskDelay(pdMS_TO_TICKS(10));
+#if APP_LOG_VERBOSE
     SyncLog_Write("AUDIO INIT: onboard DMIC2 channel=0, 16bit stereo DMA, nominal_fs=48000, warmup=1s; interval=seconds.nanoseconds (first: NA)\r\n");
+#else
+    char init_line[80];
+    snprintf(init_line, sizeof(init_line), "AUDIO INIT fs=48000 ch=%u gain=%u warmup=1s\r\n",
+             (unsigned)MIC_CHANNEL, (unsigned)INPUT_VOLUME);
+    SyncLog_Write(init_line);
+#endif
     if (!start_stream()) {
         SyncLog_Write("AUDIO ERROR: cannot start SAI RX DMA\r\n");
         vTaskSuspend(NULL);
@@ -208,7 +223,12 @@ void audio_task(void const *argument) {
     ArrivalDetector_Reset(&detector);
     uint64_t expected_sample = 0;
     uint32_t active_generation = UINT32_MAX, last_report = 0, peak = 0, clip_count = 0;
+#if APP_LOG_VERBOSE
     uint32_t seen_blocks = 0;
+#else
+    uint32_t seen_drops = 0, seen_timing = 0, seen_hwerr = 0, seen_skips = 0;
+    bool ready_reported = false;
+#endif
     TickType_t last_receive = xTaskGetTickCount();
     for (;;) {
         bool received = xQueueReceive(blocks, &task_block, pdMS_TO_TICKS(20)) == pdPASS;
@@ -254,9 +274,18 @@ void audio_task(void const *argument) {
             active_generation = UINT32_MAX;
             last_receive = xTaskGetTickCount();
         }
+#if !APP_LOG_VERBOSE
+        // HOLDOFF/ARMED cycles are expected for each event; do not log them.
+        if (detector.warmup) ready_reported = false;
+        else if (!ready_reported) {
+            SyncLog_Write("AUDIO READY\r\n");
+            ready_reported = true;
+        }
+#endif
         uint32_t ms = HAL_GetTick();
         if (ms - last_report >= 1000U) {
             last_report = ms;
+#if APP_LOG_VERBOSE
             char line[256];
             snprintf(line, sizeof(line), "AUDIO STATUS state=%s blocks=%" PRIu32
                 " rate=%" PRIu32 " peak=%" PRIu32 " noise=%" PRIu32
@@ -267,7 +296,22 @@ void audio_task(void const *argument) {
                 clip_count, dropped_blocks, timing_errors, hardware_errors, clock_skips,
                 (uint32_t)sample_period_ps);
             SyncLog_Write(line);
-            peak = 0; clip_count = 0; seen_blocks = irq_blocks;
+            seen_blocks = irq_blocks;
+#else
+            uint32_t drops = dropped_blocks, timing = timing_errors;
+            uint32_t hwerr = hardware_errors, skips = clock_skips;
+            if (drops != seen_drops || timing != seen_timing ||
+                hwerr != seen_hwerr || skips != seen_skips || clip_count) {
+                char line[128];
+                snprintf(line, sizeof(line), "AUDIO WARN drop=%" PRIu32 " timing=%" PRIu32
+                         " hwerr=%" PRIu32 " clip=%" PRIu32 " skip=%" PRIu32 "\r\n",
+                         drops, timing, hwerr, clip_count, skips);
+                SyncLog_Write(line);
+            }
+            seen_drops = drops; seen_timing = timing;
+            seen_hwerr = hwerr; seen_skips = skips;
+#endif
+            peak = 0; clip_count = 0;
         }
     }
 }

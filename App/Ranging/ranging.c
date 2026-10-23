@@ -175,22 +175,35 @@ static void display_result(void) {
     status.sequence = result_packet.sequence; status.distance_mm = result_packet.distance_mm;
     status.quality_permille = result_packet.quality_permille; status.delay_ns = result_packet.delay_ns;
     status.last_error = RANGE_OK; status.accepted++;
-    char delta[SYNC_I64_TEXT_SIZE], line[240];
+    char line[240];
+#if APP_LOG_VERBOSE
+    char delta[SYNC_I64_TEXT_SIZE];
     SyncFormat_I64(delta, status.delay_ns);
     snprintf(line, sizeof(line), "RANGE RESULT id=%" PRIu32 " board=%c distance_mm=%" PRIu32
         " source=%c dt_ns=%s quality=%" PRIu32 " a_seq=%" PRIu32 " b_seq=%" PRIu32 "\r\n",
         status.sequence, link_master ? 'A' : 'B', status.distance_mm, status.source_a ? 'A' : 'B',
         delta, status.quality_permille, result_packet.a_sequence, result_packet.b_sequence);
+#else
+    snprintf(line, sizeof(line), "RANGE RESULT id=%" PRIu32 " distance_mm=%" PRIu32
+             " source=%c quality=%" PRIu32 "\r\n",
+             status.sequence, status.distance_mm, status.source_a ? 'A' : 'B',
+             status.quality_permille);
+#endif
     SyncLog_Write(line);
     reset_transaction();
 }
 void Ranging_Poll(void) {
     if (!initialized) return;
     if (!announced) {
+#if APP_LOG_VERBOSE
         char line[160];
         snprintf(line, sizeof(line), "RANGE INIT samples=2048 pre=256 c_mm_s=%" PRIu32 " bias_ns=%" PRId32
                  " range_mm=200..2000 method=normalized_xcorr\r\n", config.sound_speed_mm_s, config.bias_ns);
-        SyncLog_Write(line); announced = true;
+        SyncLog_Write(line);
+#else
+        SyncLog_Write("RANGE INIT range_mm=200..2000\r\n");
+#endif
+        announced = true;
     }
     uint64_t now; uint32_t generation;
     bool clock_ok = TimeSync_CaptureClockFromISR(&now, &generation);
