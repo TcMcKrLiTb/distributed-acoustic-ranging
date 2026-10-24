@@ -6,6 +6,57 @@
   <Texts>
     <TextGroup Id="Group1" />
     <TextGroup Id="Unsorted">
+      <Text Id="__SingleUse_80CQ" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">等待数据</Translation>
+      </Text>
+      <Text Id="__SingleUse_GKQS" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">标定 未应用</Translation>
+      </Text>
+      <Text Id="__SingleUse_NAH9" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">声速 -- m/s</Translation>
+      </Text>
+      <Text Id="__SingleUse_3WVY" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">温度 --.- ℃</Translation>
+      </Text>
+      <Text Id="__SingleUse_WNJI" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">峰差 --</Translation>
+      </Text>
+      <Text Id="__SingleUse_03WA" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">相关 --</Translation>
+      </Text>
+      <Text Id="__SingleUse_QX07" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">ID -- TYPE --</Translation>
+      </Text>
+      <Text Id="__SingleUse_83M6" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">偏差 -- μs</Translation>
+      </Text>
+      <Text Id="__SingleUse_NDAN" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_VS5D" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_TU22" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_R9UV" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_9LX5" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_X5NE" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_IK33" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_CBLW" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">SIM</Translation>
+      </Text>
+      <Text Id="__SingleUse_CUQG" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
       <Text Id="__SingleUse_XVQ6" Alignment="Center" TypographyId="Title">
         <Translation Language="GB">MEASURE</Translation>
       </Text>
@@ -93,34 +144,34 @@
       <Text Id="__SingleUse_EMUO" Alignment="Left" TypographyId="Default">
         <Translation Language="GB">SETTINGS</Translation>
       </Text>
-      <Text Id="__SingleUse_OB8Y" Alignment="Left" TypographyId="Title">
+      <Text Id="__SingleUse_OB8Y" Alignment="Left" TypographyId="UI14">
         <Translation Language="GB">Q 0.0% OK 0 REJECT 0</Translation>
       </Text>
-      <Text Id="__SingleUse_0T6J" Alignment="Left" TypographyId="Title">
+      <Text Id="__SingleUse_0T6J" Alignment="Left" TypographyId="UI14">
         <Translation Language="GB">WAIT SYNC ID 0</Translation>
       </Text>
-      <Text Id="__SingleUse_8SSI" Alignment="Left" TypographyId="Title">
+      <Text Id="__SingleUse_8SSI" Alignment="Left" TypographyId="UI16">
         <Translation Language="GB">SOURCE -</Translation>
       </Text>
       <Text Id="__SingleUse_NB2P" Alignment="Left" TypographyId="Title">
         <Translation Language="GB">-.--- M</Translation>
       </Text>
-      <Text Id="__SingleUse_OO4F" Alignment="Left" TypographyId="Title">
+      <Text Id="__SingleUse_OO4F" Alignment="Left" TypographyId="UI14">
         <Translation Language="GB">BOARD - WAIT SYNC</Translation>
       </Text>
-      <Text Id="__SingleUse_WW3N" Alignment="Left" TypographyId="Title">
+      <Text Id="__SingleUse_WW3N" Alignment="Left" TypographyId="UI14">
         <Translation Language="GB">&lt;value&gt;</Translation>
       </Text>
-      <Text Id="__SingleUse_4RE8" Alignment="Left" TypographyId="Title">
+      <Text Id="__SingleUse_4RE8" Alignment="Left" TypographyId="UI14">
         <Translation Language="GB">&lt;value&gt;</Translation>
       </Text>
-      <Text Id="__SingleUse_VOJC" Alignment="Left" TypographyId="Default">
+      <Text Id="__SingleUse_VOJC" Alignment="Left" TypographyId="UI16">
         <Translation Language="GB">&lt;value&gt;</Translation>
       </Text>
       <Text Id="__SingleUse_BQUD" Alignment="Left" TypographyId="Large">
         <Translation Language="GB">&lt;value&gt;</Translation>
       </Text>
-      <Text Id="__SingleUse_0GWM" Alignment="Left" TypographyId="Default">
+      <Text Id="__SingleUse_0GWM" Alignment="Left" TypographyId="UI14">
         <Translation Language="GB">&lt;value&gt;</Translation>
       </Text>
       <Text Id="__SingleUse_AU9C" Alignment="Left" TypographyId="Title">
@@ -133,5 +184,7 @@
     <Typography Id="Large" Font="verdana.ttf" Size="40" Bpp="4" IsVector="no" Direction="LTR" FallbackCharacter="?" WildcardCharacters="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 .-%" />
     <Typography Id="Small" Font="verdana.ttf" Size="10" Bpp="4" IsVector="no" Direction="LTR" FallbackCharacter="?" />
     <Typography Id="Title" Font="verdana.ttf" Size="16" Bpp="4" IsVector="no" Direction="LTR" FallbackCharacter="?" WildcardCharacters="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 .-%" />
+    <Typography Id="UI14" Font="HYJiangNan.TTF" Size="14" Bpp="4" IsVector="no" Direction="LTR" FallbackCharacter="?" WildcardCharacters="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz .,:;+-/%()_μ℃—偏差相关峰差温度声速标定未应用本次上次有效结果等待同步声音数据音频击掌拒绝模拟秒前" />
+    <Typography Id="UI16" Font="HYJiangNan.TTF" Size="16" Bpp="4" IsVector="no" Direction="LTR" FallbackCharacter="?" WildcardCharacters="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz .,:;+-/%()_μ℃—偏差相关峰差温度声速标定未应用本次上次有效结果等待同步声音数据音频击掌拒绝模拟秒前" />
   </Typographies>
 </TextDatabase>

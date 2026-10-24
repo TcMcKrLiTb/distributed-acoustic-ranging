@@ -10,6 +10,17 @@
             "Width": 480,
             "Height": 272,
             "Color": {
+              "Red": 246,
+              "Green": 248,
+              "Blue": 251
+            }
+          },
+          {
+            "Type": "Box",
+            "Name": "headerBox",
+            "Width": 480,
+            "Height": 28,
+            "Color": {
               "Red": 255,
               "Green": 255,
               "Blue": 255
@@ -288,6 +299,7 @@
             "Y": 8,
             "Width": 288,
             "Height": 19,
+            "Visible": false,
             "TextId": "__SingleUse_AU9C",
             "TextRotation": "0",
             "AutoSize": true
@@ -295,12 +307,17 @@
           {
             "Type": "TextArea",
             "Name": "boardStatusText",
-            "X": 14,
-            "Y": 37,
-            "Width": 452,
-            "Height": 24,
+            "X": 12,
+            "Y": 4,
+            "Width": 260,
+            "Height": 20,
             "TextId": "__SingleUse_0GWM",
             "TextRotation": "0",
+            "Color": {
+              "Red": 24,
+              "Green": 37,
+              "Blue": 55
+            },
             "Wildcard1": {
               "TextId": "__SingleUse_OO4F",
               "UseBuffer": true,
@@ -310,12 +327,17 @@
           {
             "Type": "TextArea",
             "Name": "distanceText",
-            "X": 14,
-            "Y": 85,
-            "Width": 452,
-            "Height": 48,
+            "X": 12,
+            "Y": 68,
+            "Width": 296,
+            "Height": 56,
             "TextId": "__SingleUse_BQUD",
             "TextRotation": "0",
+            "Color": {
+              "Red": 24,
+              "Green": 37,
+              "Blue": 55
+            },
             "Wildcard1": {
               "TextId": "__SingleUse_NB2P",
               "UseBuffer": true,
@@ -325,12 +347,17 @@
           {
             "Type": "TextArea",
             "Name": "directionText",
-            "X": 14,
-            "Y": 144,
-            "Width": 452,
+            "X": 12,
+            "Y": 132,
+            "Width": 300,
             "Height": 24,
             "TextId": "__SingleUse_VOJC",
             "TextRotation": "0",
+            "Color": {
+              "Red": 24,
+              "Green": 37,
+              "Blue": 55
+            },
             "Wildcard1": {
               "TextId": "__SingleUse_8SSI",
               "UseBuffer": true,
@@ -340,12 +367,17 @@
           {
             "Type": "TextArea",
             "Name": "rangeStateText",
-            "X": 14,
-            "Y": 180,
-            "Width": 452,
-            "Height": 19,
+            "X": 12,
+            "Y": 40,
+            "Width": 278,
+            "Height": 20,
             "TextId": "__SingleUse_4RE8",
             "TextRotation": "0",
+            "Color": {
+              "Red": 78,
+              "Green": 96,
+              "Blue": 117
+            },
             "Wildcard1": {
               "TextId": "__SingleUse_0T6J",
               "UseBuffer": true,
@@ -355,14 +387,206 @@
           {
             "Type": "TextArea",
             "Name": "statisticsText",
-            "X": 14,
-            "Y": 204,
-            "Width": 452,
-            "Height": 19,
+            "X": 12,
+            "Y": 184,
+            "Width": 456,
+            "Height": 18,
             "TextId": "__SingleUse_WW3N",
             "TextRotation": "0",
+            "Color": {
+              "Red": 78,
+              "Green": 96,
+              "Blue": 117
+            },
             "Wildcard1": {
               "TextId": "__SingleUse_OB8Y",
+              "UseBuffer": true,
+              "BufferSize": 64
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "syncOffsetText",
+            "X": 278,
+            "Y": 4,
+            "Width": 140,
+            "Height": 20,
+            "TextId": "__SingleUse_CUQG",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 78,
+              "Green": 96,
+              "Blue": 117
+            },
+            "Wildcard1": {
+              "TextId": "__SingleUse_83M6",
+              "UseBuffer": true,
+              "BufferSize": 64
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "demoText",
+            "X": 426,
+            "Y": 4,
+            "Width": 42,
+            "Height": 20,
+            "TextId": "__SingleUse_CBLW",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 154,
+              "Green": 98
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "eventInfoText",
+            "X": 302,
+            "Y": 40,
+            "Width": 166,
+            "Height": 20,
+            "TextId": "__SingleUse_IK33",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 78,
+              "Green": 96,
+              "Blue": 117
+            },
+            "Wildcard1": {
+              "TextId": "__SingleUse_QX07",
+              "UseBuffer": true,
+              "BufferSize": 64
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "correlationText",
+            "X": 328,
+            "Y": 80,
+            "Width": 140,
+            "Height": 20,
+            "TextId": "__SingleUse_X5NE",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 78,
+              "Green": 96,
+              "Blue": 117
+            },
+            "Wildcard1": {
+              "TextId": "__SingleUse_03WA",
+              "UseBuffer": true,
+              "BufferSize": 64
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "peakMarginText",
+            "X": 328,
+            "Y": 106,
+            "Width": 140,
+            "Height": 20,
+            "TextId": "__SingleUse_9LX5",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 78,
+              "Green": 96,
+              "Blue": 117
+            },
+            "Wildcard1": {
+              "TextId": "__SingleUse_WNJI",
+              "UseBuffer": true,
+              "BufferSize": 64
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "temperatureText",
+            "X": 12,
+            "Y": 162,
+            "Width": 146,
+            "Height": 20,
+            "TextId": "__SingleUse_R9UV",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 78,
+              "Green": 96,
+              "Blue": 117
+            },
+            "Wildcard1": {
+              "TextId": "__SingleUse_3WVY",
+              "UseBuffer": true,
+              "BufferSize": 64
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "soundSpeedText",
+            "X": 164,
+            "Y": 162,
+            "Width": 186,
+            "Height": 20,
+            "TextId": "__SingleUse_TU22",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 78,
+              "Green": 96,
+              "Blue": 117
+            },
+            "Wildcard1": {
+              "TextId": "__SingleUse_NAH9",
+              "UseBuffer": true,
+              "BufferSize": 64
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "calibrationStatusText",
+            "X": 356,
+            "Y": 162,
+            "Width": 112,
+            "Height": 20,
+            "TextId": "__SingleUse_VS5D",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 78,
+              "Green": 96,
+              "Blue": 117
+            },
+            "Wildcard1": {
+              "TextId": "__SingleUse_GKQS",
+              "UseBuffer": true,
+              "BufferSize": 64
+            }
+          },
+          {
+            "Type": "Box",
+            "Name": "statusBox",
+            "X": 12,
+            "Y": 204,
+            "Width": 456,
+            "Height": 20,
+            "Color": {
+              "Red": 242,
+              "Green": 242,
+              "Blue": 242
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "measurementStatusText",
+            "X": 20,
+            "Y": 205,
+            "Width": 440,
+            "Height": 18,
+            "TextId": "__SingleUse_NDAN",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 24,
+              "Green": 37,
+              "Blue": 55
+            },
+            "Wildcard1": {
+              "TextId": "__SingleUse_80CQ",
               "UseBuffer": true,
               "BufferSize": 64
             }
