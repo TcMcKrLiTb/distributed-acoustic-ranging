@@ -2497,6 +2497,7 @@
       },
       {
         "Name": "waveform",
+        "CanvasBufferSize": 7200,
         "Components": [
           {
             "Type": "Box",
@@ -2504,9 +2505,9 @@
             "Width": 480,
             "Height": 272,
             "Color": {
-              "Red": 255,
-              "Green": 255,
-              "Blue": 255
+              "Red": 246,
+              "Green": 248,
+              "Blue": 251
             }
           },
           {
@@ -2759,14 +2760,331 @@
             ]
           },
           {
+            "Type": "Box",
+            "Name": "headerBox",
+            "Width": 480,
+            "Height": 28,
+            "Color": {
+              "Red": 255,
+              "Green": 255,
+              "Blue": 255
+            }
+          },
+          {
             "Type": "TextArea",
             "Name": "pageTitleText",
             "X": 12,
-            "Y": 40,
-            "Width": 456,
-            "Height": 24,
-            "TextId": "__SingleUse_QAKF",
+            "Y": 4,
+            "Width": 218,
+            "Height": 20,
+            "TextId": "__SingleUse_FCC3",
             "TextRotation": "0"
+          },
+          {
+            "Type": "TextArea",
+            "Name": "waveformSyncText",
+            "X": 200,
+            "Y": 4,
+            "Width": 218,
+            "Height": 20,
+            "TextId": "__SingleUse_U02X",
+            "TextRotation": "0",
+            "Wildcard1": {
+              "TextId": "__SingleUse_RG9K",
+              "UseBuffer": true,
+              "BufferSize": 64
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "demoText",
+            "X": 426,
+            "Y": 4,
+            "Width": 42,
+            "Height": 20,
+            "TextId": "__SingleUse_4ZNN",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 154,
+              "Green": 98
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "waveformInfoText",
+            "X": 12,
+            "Y": 36,
+            "Width": 300,
+            "Height": 20,
+            "TextId": "__SingleUse_KYKA",
+            "TextRotation": "0",
+            "Wildcard1": {
+              "TextId": "__SingleUse_AGIU",
+              "UseBuffer": true,
+              "BufferSize": 64
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "sampleRateText",
+            "X": 312,
+            "Y": 36,
+            "Width": 156,
+            "Height": 20,
+            "TextId": "__SingleUse_8SBP",
+            "TextRotation": "0",
+            "Wildcard1": {
+              "TextId": "__SingleUse_XMXJ",
+              "UseBuffer": true,
+              "BufferSize": 64
+            }
+          },
+          {
+            "Type": "StaticGraph",
+            "Name": "waveformGraph",
+            "X": 12,
+            "Y": 62,
+            "Width": 456,
+            "Height": 112,
+            "DataSeed": 404366214,
+            "NumberOfValues": 256,
+            "MaxX": 4.0,
+            "PrecisionX": "0.001",
+            "MaxY": 1200.0,
+            "MinY": -1200.0,
+            "PrecisionY": "1",
+            "XAxisScale": 1.0,
+            "LabelSizeTop": 4,
+            "LabelSizeBottom": 18,
+            "LabelSizeLeft": 42,
+            "LabelSizeRight": 10,
+            "PaddingTop": 2,
+            "PaddingBottom": 2,
+            "PaddingLeft": 2,
+            "PaddingRight": 2,
+            "GraphDrawers": [
+              {
+                "Type": "LineDrawer",
+                "LineWidth": 1,
+                "FileNameImage": "",
+                "Color": {
+                  "Red": 22,
+                  "Green": 77,
+                  "Blue": 122
+                }
+              }
+            ],
+            "XAxisGrid": {
+              "Type": "GraphGrid",
+              "Color": {
+                "Red": 211,
+                "Green": 220,
+                "Blue": 231
+              },
+              "Interval": 1.0,
+              "LineWidth": 1
+            },
+            "YAxisGrid": {
+              "Type": "GraphGrid",
+              "Color": {
+                "Red": 211,
+                "Green": 220,
+                "Blue": 231
+              },
+              "Interval": 600.0,
+              "LineWidth": 1
+            },
+            "XAxisLabel": {
+              "Type": "GraphLabel",
+              "Interval": 1.0,
+              "DecimalSeparator": "Point",
+              "TextColor": {
+                "Red": 78,
+                "Green": 96,
+                "Blue": 117
+              },
+              "TextId": "__SingleUse_Y1RC",
+              "TextRotation": "0",
+              "Position": "Bottom"
+            },
+            "YAxisLabel": {
+              "Type": "GraphLabel",
+              "Interval": 600.0,
+              "DecimalSeparator": "Point",
+              "TextColor": {
+                "Red": 78,
+                "Green": 96,
+                "Blue": 117
+              },
+              "TextId": "__SingleUse_XN2U",
+              "TextRotation": "0",
+              "Position": "Left"
+            }
+          },
+          {
+            "Type": "FlexButton",
+            "Name": "timebaseButton",
+            "X": 12,
+            "Y": 184,
+            "Width": 148,
+            "Height": 40,
+            "ButtonTrigger": {
+              "Type": "ClickButtonTrigger"
+            },
+            "ButtonStyles": [
+              {
+                "Type": "TextButtonStyle",
+                "Y": 10,
+                "TextId": "__SingleUse_SI0N",
+                "TextRotation": "0",
+                "ColorReleased": {
+                  "Red": 10,
+                  "Green": 10,
+                  "Blue": 10
+                },
+                "ColorPressed": {
+                  "Red": 10,
+                  "Green": 10,
+                  "Blue": 10
+                }
+              },
+              {
+                "Type": "BoxWithBorderButtonStyle",
+                "Width": 148,
+                "Height": 40,
+                "LockToFlexButtonSize": true,
+                "BorderSize": 2,
+                "ColorReleased": {
+                  "Red": 255,
+                  "Green": 255,
+                  "Blue": 255
+                },
+                "ColorPressed": {
+                  "Green": 153,
+                  "Blue": 204
+                },
+                "ColorBorderReleased": {
+                  "Red": 211,
+                  "Green": 220,
+                  "Blue": 231
+                },
+                "ColorBorderPressed": {
+                  "Red": 51,
+                  "Green": 102,
+                  "Blue": 153
+                }
+              }
+            ]
+          },
+          {
+            "Type": "FlexButton",
+            "Name": "amplitudeButton",
+            "X": 170,
+            "Y": 184,
+            "Width": 148,
+            "Height": 40,
+            "ButtonTrigger": {
+              "Type": "ClickButtonTrigger"
+            },
+            "ButtonStyles": [
+              {
+                "Type": "TextButtonStyle",
+                "Y": 10,
+                "TextId": "__SingleUse_F7SI",
+                "TextRotation": "0",
+                "ColorReleased": {
+                  "Red": 10,
+                  "Green": 10,
+                  "Blue": 10
+                },
+                "ColorPressed": {
+                  "Red": 10,
+                  "Green": 10,
+                  "Blue": 10
+                }
+              },
+              {
+                "Type": "BoxWithBorderButtonStyle",
+                "Width": 148,
+                "Height": 40,
+                "LockToFlexButtonSize": true,
+                "BorderSize": 2,
+                "ColorReleased": {
+                  "Red": 255,
+                  "Green": 255,
+                  "Blue": 255
+                },
+                "ColorPressed": {
+                  "Green": 153,
+                  "Blue": 204
+                },
+                "ColorBorderReleased": {
+                  "Red": 211,
+                  "Green": 220,
+                  "Blue": 231
+                },
+                "ColorBorderPressed": {
+                  "Red": 51,
+                  "Green": 102,
+                  "Blue": 153
+                }
+              }
+            ]
+          },
+          {
+            "Type": "FlexButton",
+            "Name": "freezeButton",
+            "X": 328,
+            "Y": 184,
+            "Width": 148,
+            "Height": 40,
+            "ButtonTrigger": {
+              "Type": "ClickButtonTrigger"
+            },
+            "ButtonStyles": [
+              {
+                "Type": "TextButtonStyle",
+                "Y": 10,
+                "TextId": "__SingleUse_BJDT",
+                "TextRotation": "0",
+                "ColorReleased": {
+                  "Red": 10,
+                  "Green": 10,
+                  "Blue": 10
+                },
+                "ColorPressed": {
+                  "Red": 10,
+                  "Green": 10,
+                  "Blue": 10
+                }
+              },
+              {
+                "Type": "BoxWithBorderButtonStyle",
+                "Width": 148,
+                "Height": 40,
+                "LockToFlexButtonSize": true,
+                "BorderSize": 2,
+                "ColorReleased": {
+                  "Red": 255,
+                  "Green": 255,
+                  "Blue": 255
+                },
+                "ColorPressed": {
+                  "Green": 153,
+                  "Blue": 204
+                },
+                "ColorBorderReleased": {
+                  "Red": 211,
+                  "Green": 220,
+                  "Blue": 231
+                },
+                "ColorBorderPressed": {
+                  "Red": 51,
+                  "Green": 102,
+                  "Blue": 153
+                }
+              }
+            ]
           }
         ],
         "Interactions": [
