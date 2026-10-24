@@ -667,9 +667,9 @@
             "Width": 480,
             "Height": 272,
             "Color": {
-              "Red": 255,
-              "Green": 255,
-              "Blue": 255
+              "Red": 246,
+              "Green": 248,
+              "Blue": 251
             }
           },
           {
@@ -1475,9 +1475,9 @@
                 "TextId": "__SingleUse_TAI6",
                 "TextRotation": "0",
                 "ColorReleased": {
-                  "Red": 10,
-                  "Green": 10,
-                  "Blue": 10
+                  "Red": 255,
+                  "Green": 255,
+                  "Blue": 255
                 },
                 "ColorPressed": {
                   "Red": 10,
@@ -1490,18 +1490,20 @@
                 "Width": 74,
                 "Height": 32,
                 "LockToFlexButtonSize": true,
-                "BorderSize": 5,
+                "BorderSize": 2,
                 "ColorReleased": {
-                  "Green": 102,
-                  "Blue": 153
+                  "Red": 22,
+                  "Green": 77,
+                  "Blue": 122
                 },
                 "ColorPressed": {
                   "Green": 153,
                   "Blue": 204
                 },
                 "ColorBorderReleased": {
-                  "Green": 51,
-                  "Blue": 102
+                  "Red": 211,
+                  "Green": 220,
+                  "Blue": 231
                 },
                 "ColorBorderPressed": {
                   "Red": 51,
@@ -1706,9 +1708,9 @@
             "Width": 480,
             "Height": 272,
             "Color": {
-              "Red": 255,
-              "Green": 255,
-              "Blue": 255
+              "Red": 246,
+              "Green": 248,
+              "Blue": 251
             }
           },
           {
@@ -1961,14 +1963,481 @@
             ]
           },
           {
+            "Type": "Box",
+            "Name": "headerBox",
+            "Width": 480,
+            "Height": 28,
+            "Color": {
+              "Red": 255,
+              "Green": 255,
+              "Blue": 255
+            }
+          },
+          {
             "Type": "TextArea",
             "Name": "pageTitleText",
             "X": 12,
-            "Y": 40,
-            "Width": 456,
-            "Height": 24,
+            "Y": 4,
+            "Width": 218,
+            "Height": 20,
             "TextId": "__SingleUse_K2HU",
             "TextRotation": "0"
+          },
+          {
+            "Type": "TextArea",
+            "Name": "calibrationSyncText",
+            "X": 200,
+            "Y": 4,
+            "Width": 218,
+            "Height": 20,
+            "TextId": "__SingleUse_S3PU",
+            "TextRotation": "0",
+            "Wildcard1": {
+              "TextId": "__SingleUse_MYIF",
+              "UseBuffer": true,
+              "BufferSize": 64
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "demoText",
+            "X": 426,
+            "Y": 4,
+            "Width": 42,
+            "Height": 20,
+            "TextId": "__SingleUse_JWGH",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 154,
+              "Green": 98
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "referenceDistanceLabel",
+            "X": 12,
+            "Y": 46,
+            "Width": 84,
+            "Height": 20,
+            "TextId": "__SingleUse_FLDC",
+            "TextRotation": "0"
+          },
+          {
+            "Type": "FlexButton",
+            "Name": "referenceMinusButton",
+            "X": 106,
+            "Y": 38,
+            "Width": 40,
+            "Height": 36,
+            "ButtonTrigger": {
+              "Type": "ClickButtonTrigger"
+            },
+            "ButtonStyles": [
+              {
+                "Type": "TextButtonStyle",
+                "X": 1,
+                "Y": 9,
+                "TextId": "__SingleUse_OK5L",
+                "TextRotation": "0",
+                "ColorReleased": {
+                  "Red": 10,
+                  "Green": 10,
+                  "Blue": 10
+                },
+                "ColorPressed": {
+                  "Red": 10,
+                  "Green": 10,
+                  "Blue": 10
+                }
+              },
+              {
+                "Type": "BoxWithBorderButtonStyle",
+                "Width": 40,
+                "Height": 36,
+                "LockToFlexButtonSize": true,
+                "BorderSize": 2,
+                "ColorReleased": {
+                  "Red": 255,
+                  "Green": 255,
+                  "Blue": 255
+                },
+                "ColorPressed": {
+                  "Green": 153,
+                  "Blue": 204
+                },
+                "ColorBorderReleased": {
+                  "Red": 211,
+                  "Green": 220,
+                  "Blue": 231
+                },
+                "ColorBorderPressed": {
+                  "Red": 51,
+                  "Green": 102,
+                  "Blue": 153
+                }
+              }
+            ]
+          },
+          {
+            "Type": "TextArea",
+            "Name": "referenceDistanceText",
+            "X": 154,
+            "Y": 44,
+            "Width": 88,
+            "Height": 24,
+            "TextId": "__SingleUse_1UAC",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 24,
+              "Green": 37,
+              "Blue": 55
+            },
+            "Wildcard1": {
+              "TextId": "__SingleUse_YDSO",
+              "UseBuffer": true,
+              "BufferSize": 32
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "referenceUnitText",
+            "X": 248,
+            "Y": 46,
+            "Width": 24,
+            "Height": 20,
+            "TextId": "__SingleUse_1S12",
+            "TextRotation": "0"
+          },
+          {
+            "Type": "FlexButton",
+            "Name": "referencePlusButton",
+            "X": 280,
+            "Y": 38,
+            "Width": 40,
+            "Height": 36,
+            "ButtonTrigger": {
+              "Type": "ClickButtonTrigger"
+            },
+            "ButtonStyles": [
+              {
+                "Type": "TextButtonStyle",
+                "X": 1,
+                "Y": 9,
+                "TextId": "__SingleUse_GOPJ",
+                "TextRotation": "0",
+                "ColorReleased": {
+                  "Red": 10,
+                  "Green": 10,
+                  "Blue": 10
+                },
+                "ColorPressed": {
+                  "Red": 10,
+                  "Green": 10,
+                  "Blue": 10
+                }
+              },
+              {
+                "Type": "BoxWithBorderButtonStyle",
+                "Width": 40,
+                "Height": 36,
+                "LockToFlexButtonSize": true,
+                "BorderSize": 2,
+                "ColorReleased": {
+                  "Red": 255,
+                  "Green": 255,
+                  "Blue": 255
+                },
+                "ColorPressed": {
+                  "Green": 153,
+                  "Blue": 204
+                },
+                "ColorBorderReleased": {
+                  "Red": 211,
+                  "Green": 220,
+                  "Blue": 231
+                },
+                "ColorBorderPressed": {
+                  "Red": 51,
+                  "Green": 102,
+                  "Blue": 153
+                }
+              }
+            ]
+          },
+          {
+            "Type": "TextArea",
+            "Name": "calibrationStatusText",
+            "X": 332,
+            "Y": 46,
+            "Width": 136,
+            "Height": 20,
+            "TextId": "__SingleUse_8ZEG",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 78,
+              "Green": 96,
+              "Blue": 117
+            },
+            "Wildcard1": {
+              "TextId": "__SingleUse_UG1B",
+              "UseBuffer": true,
+              "BufferSize": 64
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "sideAProgressText",
+            "X": 12,
+            "Y": 84,
+            "Width": 210,
+            "Height": 20,
+            "TextId": "__SingleUse_G9P0",
+            "TextRotation": "0",
+            "Wildcard1": {
+              "TextId": "__SingleUse_8S1Z",
+              "UseBuffer": true,
+              "BufferSize": 32
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "sideBProgressText",
+            "X": 258,
+            "Y": 84,
+            "Width": 210,
+            "Height": 20,
+            "TextId": "__SingleUse_0U33",
+            "TextRotation": "0",
+            "Wildcard1": {
+              "TextId": "__SingleUse_1HN4",
+              "UseBuffer": true,
+              "BufferSize": 32
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "calibrationStepText",
+            "X": 12,
+            "Y": 132,
+            "Width": 456,
+            "Height": 22,
+            "TextId": "__SingleUse_TB4E",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 24,
+              "Green": 37,
+              "Blue": 55
+            },
+            "Wildcard1": {
+              "TextId": "__SingleUse_4YAF",
+              "UseBuffer": true,
+              "BufferSize": 96
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "calibrationBiasText",
+            "X": 12,
+            "Y": 160,
+            "Width": 230,
+            "Height": 20,
+            "TextId": "__SingleUse_31T5",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 78,
+              "Green": 96,
+              "Blue": 117
+            },
+            "Wildcard1": {
+              "TextId": "__SingleUse_Y62R",
+              "UseBuffer": true,
+              "BufferSize": 64
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "calibrationQualityText",
+            "X": 258,
+            "Y": 160,
+            "Width": 210,
+            "Height": 20,
+            "TextId": "__SingleUse_Z93Z",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 78,
+              "Green": 96,
+              "Blue": 117
+            },
+            "Wildcard1": {
+              "TextId": "__SingleUse_2OVQ",
+              "UseBuffer": true,
+              "BufferSize": 64
+            }
+          },
+          {
+            "Type": "FlexButton",
+            "Name": "startCalibrationButton",
+            "X": 12,
+            "Y": 184,
+            "Width": 140,
+            "Height": 40,
+            "ButtonTrigger": {
+              "Type": "ClickButtonTrigger"
+            },
+            "ButtonStyles": [
+              {
+                "Type": "TextButtonStyle",
+                "Y": 9,
+                "TextId": "__SingleUse_ZFXM",
+                "TextRotation": "0",
+                "ColorReleased": {
+                  "Red": 255,
+                  "Green": 255,
+                  "Blue": 255
+                },
+                "ColorPressed": {
+                  "Red": 10,
+                  "Green": 10,
+                  "Blue": 10
+                }
+              },
+              {
+                "Type": "BoxWithBorderButtonStyle",
+                "Width": 140,
+                "Height": 40,
+                "LockToFlexButtonSize": true,
+                "BorderSize": 2,
+                "ColorReleased": {
+                  "Red": 22,
+                  "Green": 77,
+                  "Blue": 122
+                },
+                "ColorPressed": {
+                  "Green": 153,
+                  "Blue": 204
+                },
+                "ColorBorderReleased": {
+                  "Red": 211,
+                  "Green": 220,
+                  "Blue": 231
+                },
+                "ColorBorderPressed": {
+                  "Red": 51,
+                  "Green": 102,
+                  "Blue": 153
+                }
+              }
+            ]
+          },
+          {
+            "Type": "FlexButton",
+            "Name": "cancelCalibrationButton",
+            "X": 170,
+            "Y": 184,
+            "Width": 140,
+            "Height": 40,
+            "ButtonTrigger": {
+              "Type": "ClickButtonTrigger"
+            },
+            "ButtonStyles": [
+              {
+                "Type": "TextButtonStyle",
+                "Y": 9,
+                "TextId": "__SingleUse_DKWM",
+                "TextRotation": "0",
+                "ColorReleased": {
+                  "Red": 122,
+                  "Green": 122,
+                  "Blue": 122
+                },
+                "ColorPressed": {
+                  "Red": 10,
+                  "Green": 10,
+                  "Blue": 10
+                }
+              },
+              {
+                "Type": "BoxWithBorderButtonStyle",
+                "Width": 140,
+                "Height": 40,
+                "LockToFlexButtonSize": true,
+                "BorderSize": 2,
+                "ColorReleased": {
+                  "Red": 235,
+                  "Green": 235,
+                  "Blue": 235
+                },
+                "ColorPressed": {
+                  "Green": 153,
+                  "Blue": 204
+                },
+                "ColorBorderReleased": {
+                  "Red": 211,
+                  "Green": 220,
+                  "Blue": 231
+                },
+                "ColorBorderPressed": {
+                  "Red": 51,
+                  "Green": 102,
+                  "Blue": 153
+                }
+              }
+            ]
+          },
+          {
+            "Type": "FlexButton",
+            "Name": "saveCalibrationButton",
+            "X": 328,
+            "Y": 184,
+            "Width": 140,
+            "Height": 40,
+            "ButtonTrigger": {
+              "Type": "ClickButtonTrigger"
+            },
+            "ButtonStyles": [
+              {
+                "Type": "TextButtonStyle",
+                "Y": 9,
+                "TextId": "__SingleUse_HEWO",
+                "TextRotation": "0",
+                "ColorReleased": {
+                  "Red": 122,
+                  "Green": 122,
+                  "Blue": 122
+                },
+                "ColorPressed": {
+                  "Red": 10,
+                  "Green": 10,
+                  "Blue": 10
+                }
+              },
+              {
+                "Type": "BoxWithBorderButtonStyle",
+                "Width": 140,
+                "Height": 40,
+                "LockToFlexButtonSize": true,
+                "BorderSize": 2,
+                "ColorReleased": {
+                  "Red": 235,
+                  "Green": 235,
+                  "Blue": 235
+                },
+                "ColorPressed": {
+                  "Green": 153,
+                  "Blue": 204
+                },
+                "ColorBorderReleased": {
+                  "Red": 211,
+                  "Green": 220,
+                  "Blue": 231
+                },
+                "ColorBorderPressed": {
+                  "Red": 51,
+                  "Green": 102,
+                  "Blue": 153
+                }
+              }
+            ]
           }
         ],
         "Interactions": [
