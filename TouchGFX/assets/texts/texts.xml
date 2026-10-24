@@ -6,6 +6,93 @@
   <Texts>
     <TextGroup Id="Group1" />
     <TextGroup Id="Unsorted">
+      <Text Id="__SingleUse_XVQ6" Alignment="Center" TypographyId="Title">
+        <Translation Language="GB">MEASURE</Translation>
+      </Text>
+      <Text Id="__SingleUse_4T8S" Alignment="Center" TypographyId="Title">
+        <Translation Language="GB">SETTINGS</Translation>
+      </Text>
+      <Text Id="__SingleUse_3B63" Alignment="Center" TypographyId="Title">
+        <Translation Language="GB">CAL</Translation>
+      </Text>
+      <Text Id="__SingleUse_U0LJ" Alignment="Center" TypographyId="Title">
+        <Translation Language="GB">WAVE</Translation>
+      </Text>
+      <Text Id="__SingleUse_B6RE" Alignment="Center" TypographyId="Title">
+        <Translation Language="GB">DIAG</Translation>
+      </Text>
+      <Text Id="__SingleUse_VNTO" Alignment="Center" TypographyId="Title">
+        <Translation Language="GB">MEASURE</Translation>
+      </Text>
+      <Text Id="__SingleUse_HQTP" Alignment="Center" TypographyId="Title">
+        <Translation Language="GB">SETTINGS</Translation>
+      </Text>
+      <Text Id="__SingleUse_HAXP" Alignment="Center" TypographyId="Title">
+        <Translation Language="GB">CAL</Translation>
+      </Text>
+      <Text Id="__SingleUse_HFSO" Alignment="Center" TypographyId="Title">
+        <Translation Language="GB">WAVE</Translation>
+      </Text>
+      <Text Id="__SingleUse_1VEA" Alignment="Center" TypographyId="Title">
+        <Translation Language="GB">DIAG</Translation>
+      </Text>
+      <Text Id="__SingleUse_MCLS" Alignment="Center" TypographyId="Title">
+        <Translation Language="GB">MEASURE</Translation>
+      </Text>
+      <Text Id="__SingleUse_LC52" Alignment="Center" TypographyId="Title">
+        <Translation Language="GB">SETTINGS</Translation>
+      </Text>
+      <Text Id="__SingleUse_ARR3" Alignment="Center" TypographyId="Title">
+        <Translation Language="GB">CAL</Translation>
+      </Text>
+      <Text Id="__SingleUse_9YMD" Alignment="Center" TypographyId="Title">
+        <Translation Language="GB">WAVE</Translation>
+      </Text>
+      <Text Id="__SingleUse_O7EL" Alignment="Center" TypographyId="Title">
+        <Translation Language="GB">DIAG</Translation>
+      </Text>
+      <Text Id="__SingleUse_ZMOW" Alignment="Center" TypographyId="Title">
+        <Translation Language="GB">MEASURE</Translation>
+      </Text>
+      <Text Id="__SingleUse_YDEJ" Alignment="Center" TypographyId="Title">
+        <Translation Language="GB">SETTINGS</Translation>
+      </Text>
+      <Text Id="__SingleUse_53TQ" Alignment="Center" TypographyId="Title">
+        <Translation Language="GB">CAL</Translation>
+      </Text>
+      <Text Id="__SingleUse_GT6C" Alignment="Center" TypographyId="Title">
+        <Translation Language="GB">WAVE</Translation>
+      </Text>
+      <Text Id="__SingleUse_K39B" Alignment="Center" TypographyId="Title">
+        <Translation Language="GB">DIAG</Translation>
+      </Text>
+      <Text Id="__SingleUse_QD32" Alignment="Center" TypographyId="Title">
+        <Translation Language="GB">DIAG</Translation>
+      </Text>
+      <Text Id="__SingleUse_IJU7" Alignment="Center" TypographyId="Title">
+        <Translation Language="GB">WAVE</Translation>
+      </Text>
+      <Text Id="__SingleUse_2VAX" Alignment="Center" TypographyId="Title">
+        <Translation Language="GB">CAL</Translation>
+      </Text>
+      <Text Id="__SingleUse_VNCR" Alignment="Center" TypographyId="Title">
+        <Translation Language="GB">SETTINGS</Translation>
+      </Text>
+      <Text Id="__SingleUse_NH1C" Alignment="Center" TypographyId="Title">
+        <Translation Language="GB">MEASURE</Translation>
+      </Text>
+      <Text Id="__SingleUse_NIH4" Alignment="Left" TypographyId="Default">
+        <Translation Language="GB">DIAGNOSTICS</Translation>
+      </Text>
+      <Text Id="__SingleUse_QAKF" Alignment="Left" TypographyId="Default">
+        <Translation Language="GB">WAVEFORM</Translation>
+      </Text>
+      <Text Id="__SingleUse_K2HU" Alignment="Left" TypographyId="Default">
+        <Translation Language="GB">CALIBRATION</Translation>
+      </Text>
+      <Text Id="__SingleUse_EMUO" Alignment="Left" TypographyId="Default">
+        <Translation Language="GB">SETTINGS</Translation>
+      </Text>
       <Text Id="__SingleUse_OB8Y" Alignment="Left" TypographyId="Title">
         <Translation Language="GB">Q 0.0% OK 0 REJECT 0</Translation>
       </Text>

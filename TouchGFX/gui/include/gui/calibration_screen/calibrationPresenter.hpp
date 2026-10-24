@@ -1,0 +1,36 @@
+#ifndef CALIBRATIONPRESENTER_HPP
+#define CALIBRATIONPRESENTER_HPP
+
+#include <gui/model/ModelListener.hpp>
+#include <mvp/Presenter.hpp>
+
+using namespace touchgfx;
+
+class calibrationView;
+
+class calibrationPresenter : public touchgfx::Presenter, public ModelListener
+{
+public:
+    calibrationPresenter(calibrationView& v);
+
+    /**
+     * The activate function is called automatically when this screen is "switched in"
+     * (ie. made active). Initialization logic can be placed here.
+     */
+    virtual void activate();
+
+    /**
+     * The deactivate function is called automatically when this screen is "switched out"
+     * (ie. made inactive). Teardown functionality can be placed here.
+     */
+    virtual void deactivate();
+
+    virtual ~calibrationPresenter() {}
+
+private:
+    calibrationPresenter();
+
+    calibrationView& view;
+};
+
+#endif // CALIBRATIONPRESENTER_HPP
