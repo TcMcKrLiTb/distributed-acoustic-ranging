@@ -1978,7 +1978,7 @@
             "Name": "pageTitleText",
             "X": 12,
             "Y": 4,
-            "Width": 218,
+            "Width": 180,
             "Height": 20,
             "TextId": "__SingleUse_K2HU",
             "TextRotation": "0"
@@ -2775,7 +2775,7 @@
             "Name": "pageTitleText",
             "X": 12,
             "Y": 4,
-            "Width": 218,
+            "Width": 180,
             "Height": 20,
             "TextId": "__SingleUse_FCC3",
             "TextRotation": "0"
@@ -3151,9 +3151,9 @@
             "Width": 480,
             "Height": 272,
             "Color": {
-              "Red": 255,
-              "Green": 255,
-              "Blue": 255
+              "Red": 246,
+              "Green": 248,
+              "Blue": 251
             }
           },
           {
@@ -3406,14 +3406,409 @@
             ]
           },
           {
+            "Type": "Box",
+            "Name": "headerBox",
+            "Width": 480,
+            "Height": 28,
+            "Color": {
+              "Red": 255,
+              "Green": 255,
+              "Blue": 255
+            }
+          },
+          {
             "Type": "TextArea",
             "Name": "pageTitleText",
             "X": 12,
-            "Y": 40,
-            "Width": 456,
-            "Height": 24,
-            "TextId": "__SingleUse_NIH4",
-            "TextRotation": "0"
+            "Y": 4,
+            "Width": 180,
+            "Height": 20,
+            "TextId": "__SingleUse_CK4L",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 24,
+              "Green": 37,
+              "Blue": 55
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "diagnosticsSyncText",
+            "X": 200,
+            "Y": 4,
+            "Width": 218,
+            "Height": 20,
+            "TextId": "__SingleUse_APLV",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 78,
+              "Green": 96,
+              "Blue": 117
+            },
+            "Wildcard1": {
+              "TextId": "__SingleUse_TTKG",
+              "UseBuffer": true,
+              "BufferSize": 64
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "demoText",
+            "X": 426,
+            "Y": 4,
+            "Width": 42,
+            "Height": 20,
+            "TextId": "__SingleUse_L6R0",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 154,
+              "Green": 98
+            }
+          },
+          {
+            "Type": "FlexButton",
+            "Name": "diagSyncButton",
+            "X": 12,
+            "Y": 36,
+            "Width": 144,
+            "Height": 32,
+            "ButtonTrigger": {
+              "Type": "ClickButtonTrigger"
+            },
+            "ButtonStyles": [
+              {
+                "Type": "TextButtonStyle",
+                "Y": 6,
+                "TextId": "__SingleUse_1VQ7",
+                "TextRotation": "0",
+                "ColorReleased": {
+                  "Red": 255,
+                  "Green": 255,
+                  "Blue": 255
+                },
+                "ColorPressed": {
+                  "Red": 10,
+                  "Green": 10,
+                  "Blue": 10
+                }
+              },
+              {
+                "Type": "BoxWithBorderButtonStyle",
+                "Width": 144,
+                "Height": 32,
+                "LockToFlexButtonSize": true,
+                "BorderSize": 2,
+                "ColorReleased": {
+                  "Red": 22,
+                  "Green": 77,
+                  "Blue": 122
+                },
+                "ColorPressed": {
+                  "Green": 153,
+                  "Blue": 204
+                },
+                "ColorBorderReleased": {
+                  "Red": 211,
+                  "Green": 220,
+                  "Blue": 231
+                },
+                "ColorBorderPressed": {
+                  "Red": 51,
+                  "Green": 102,
+                  "Blue": 153
+                }
+              }
+            ]
+          },
+          {
+            "Type": "FlexButton",
+            "Name": "diagAudioButton",
+            "X": 168,
+            "Y": 36,
+            "Width": 144,
+            "Height": 32,
+            "ButtonTrigger": {
+              "Type": "ClickButtonTrigger"
+            },
+            "ButtonStyles": [
+              {
+                "Type": "TextButtonStyle",
+                "Y": 6,
+                "TextId": "__SingleUse_J4UC",
+                "TextRotation": "0",
+                "ColorReleased": {
+                  "Red": 10,
+                  "Green": 10,
+                  "Blue": 10
+                },
+                "ColorPressed": {
+                  "Red": 10,
+                  "Green": 10,
+                  "Blue": 10
+                }
+              },
+              {
+                "Type": "BoxWithBorderButtonStyle",
+                "Width": 144,
+                "Height": 32,
+                "LockToFlexButtonSize": true,
+                "BorderSize": 2,
+                "ColorReleased": {
+                  "Red": 255,
+                  "Green": 255,
+                  "Blue": 255
+                },
+                "ColorPressed": {
+                  "Green": 153,
+                  "Blue": 204
+                },
+                "ColorBorderReleased": {
+                  "Red": 211,
+                  "Green": 220,
+                  "Blue": 231
+                },
+                "ColorBorderPressed": {
+                  "Red": 51,
+                  "Green": 102,
+                  "Blue": 153
+                }
+              }
+            ]
+          },
+          {
+            "Type": "FlexButton",
+            "Name": "diagResultsButton",
+            "X": 324,
+            "Y": 36,
+            "Width": 144,
+            "Height": 32,
+            "ButtonTrigger": {
+              "Type": "ClickButtonTrigger"
+            },
+            "ButtonStyles": [
+              {
+                "Type": "TextButtonStyle",
+                "Y": 6,
+                "TextId": "__SingleUse_J5CE",
+                "TextRotation": "0",
+                "ColorReleased": {
+                  "Red": 10,
+                  "Green": 10,
+                  "Blue": 10
+                },
+                "ColorPressed": {
+                  "Red": 10,
+                  "Green": 10,
+                  "Blue": 10
+                }
+              },
+              {
+                "Type": "BoxWithBorderButtonStyle",
+                "Width": 144,
+                "Height": 32,
+                "LockToFlexButtonSize": true,
+                "BorderSize": 2,
+                "ColorReleased": {
+                  "Red": 255,
+                  "Green": 255,
+                  "Blue": 255
+                },
+                "ColorPressed": {
+                  "Green": 153,
+                  "Blue": 204
+                },
+                "ColorBorderReleased": {
+                  "Red": 211,
+                  "Green": 220,
+                  "Blue": 231
+                },
+                "ColorBorderPressed": {
+                  "Red": 51,
+                  "Green": 102,
+                  "Blue": 153
+                }
+              }
+            ]
+          },
+          {
+            "Type": "TextArea",
+            "Name": "diagRow1LabelText",
+            "X": 12,
+            "Y": 82,
+            "Width": 160,
+            "Height": 20,
+            "TextId": "__SingleUse_021V",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 78,
+              "Green": 96,
+              "Blue": 117
+            },
+            "Wildcard1": {
+              "TextId": "__SingleUse_X47M",
+              "UseBuffer": true,
+              "BufferSize": 64
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "diagRow1ValueText",
+            "X": 184,
+            "Y": 82,
+            "Width": 284,
+            "Height": 20,
+            "TextId": "__SingleUse_L8YZ",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 24,
+              "Green": 37,
+              "Blue": 55
+            },
+            "Wildcard1": {
+              "TextId": "__SingleUse_8QHV",
+              "UseBuffer": true,
+              "BufferSize": 64
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "diagRow2LabelText",
+            "X": 12,
+            "Y": 108,
+            "Width": 160,
+            "Height": 20,
+            "TextId": "__SingleUse_ZMUM",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 78,
+              "Green": 96,
+              "Blue": 117
+            },
+            "Wildcard1": {
+              "TextId": "__SingleUse_4SHE",
+              "UseBuffer": true,
+              "BufferSize": 64
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "diagRow2ValueText",
+            "X": 184,
+            "Y": 108,
+            "Width": 284,
+            "Height": 20,
+            "TextId": "__SingleUse_0XYS",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 24,
+              "Green": 37,
+              "Blue": 55
+            },
+            "Wildcard1": {
+              "TextId": "__SingleUse_XFEU",
+              "UseBuffer": true,
+              "BufferSize": 64
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "diagRow3LabelText",
+            "X": 12,
+            "Y": 134,
+            "Width": 160,
+            "Height": 20,
+            "TextId": "__SingleUse_5593",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 78,
+              "Green": 96,
+              "Blue": 117
+            },
+            "Wildcard1": {
+              "TextId": "__SingleUse_7PM0",
+              "UseBuffer": true,
+              "BufferSize": 64
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "diagRow3ValueText",
+            "X": 184,
+            "Y": 134,
+            "Width": 284,
+            "Height": 20,
+            "TextId": "__SingleUse_CMKQ",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 24,
+              "Green": 37,
+              "Blue": 55
+            },
+            "Wildcard1": {
+              "TextId": "__SingleUse_B4Q6",
+              "UseBuffer": true,
+              "BufferSize": 64
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "diagRow4LabelText",
+            "X": 12,
+            "Y": 160,
+            "Width": 160,
+            "Height": 20,
+            "TextId": "__SingleUse_JYG8",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 78,
+              "Green": 96,
+              "Blue": 117
+            },
+            "Wildcard1": {
+              "TextId": "__SingleUse_MTE8",
+              "UseBuffer": true,
+              "BufferSize": 64
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "diagRow4ValueText",
+            "X": 184,
+            "Y": 160,
+            "Width": 284,
+            "Height": 20,
+            "TextId": "__SingleUse_9P60",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 24,
+              "Green": 37,
+              "Blue": 55
+            },
+            "Wildcard1": {
+              "TextId": "__SingleUse_14FP",
+              "UseBuffer": true,
+              "BufferSize": 64
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "diagnosticHintText",
+            "X": 12,
+            "Y": 194,
+            "Width": 306,
+            "Height": 20,
+            "TextId": "__SingleUse_7GHV",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 78,
+              "Green": 96,
+              "Blue": 117
+            },
+            "Wildcard1": {
+              "TextId": "__SingleUse_DK76",
+              "UseBuffer": true,
+              "BufferSize": 64
+            }
           }
         ],
         "Interactions": [
