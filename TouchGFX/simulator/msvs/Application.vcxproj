@@ -24,6 +24,18 @@
     <ClCompile Include="..\..\gui\src\screen_screen\screenView.cpp"/>
     <ClCompile Include="..\..\generated\gui_generated\src\screen_screen\screenViewBase.cpp"/>
     <ClCompile Include="..\..\generated\simulator\src\video\SoftwareMJPEGDecoder.cpp"/>
+    <ClCompile Include="..\..\gui\src\calibration_screen\calibrationPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\calibration_screen\calibrationView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\calibration_screen\calibrationViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\diagnostics_screen\diagnosticsPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\diagnostics_screen\diagnosticsView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\diagnostics_screen\diagnosticsViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\settings_screen\settingsPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\settings_screen\settingsView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\settings_screen\settingsViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\waveform_screen\waveformPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\waveform_screen\waveformView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\waveform_screen\waveformViewBase.cpp"/>
   </ItemGroup>
   <ItemGroup>
     <None Include="$(ApplicationRoot)\assets\texts\texts.xml"/>
@@ -177,6 +189,18 @@
     <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\screen_screen\screenViewBase.hpp"/>
     <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\common\SimConstants.hpp"/>
     <ClInclude Include="..\..\generated\simulator\include\simulator\video\SoftwareMJPEGDecoder.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\calibration_screen\calibrationPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\calibration_screen\calibrationView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\calibration_screen\calibrationViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\diagnostics_screen\diagnosticsPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\diagnostics_screen\diagnosticsView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\diagnostics_screen\diagnosticsViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settings_screen\settingsPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settings_screen\settingsView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\settings_screen\settingsViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\waveform_screen\waveformPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\waveform_screen\waveformView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\waveform_screen\waveformViewBase.hpp"/>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="$(ApplicationRoot)\generated\simulator\touchgfx.rc"/>

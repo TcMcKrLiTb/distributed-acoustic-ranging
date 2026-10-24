@@ -184,6 +184,54 @@
     <Filter Include="Header Files\generated\simulator\include\simulator\video">
       <UniqueIdentifier>272B5103-48B3-DE96-ABAF-BDA1CFAEBF90</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\gui\waveform_screen">
+      <UniqueIdentifier>01AFEB98-306D-46BD-838D-652F232F7FF3</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\gui\settings_screen">
+      <UniqueIdentifier>5DD317A5-93D6-5A6C-EC8E-39C5429FCA65</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\gui\settings_screen">
+      <UniqueIdentifier>A7A168AF-A81C-2A1A-5A25-1C317FCD06AC</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\gui\diagnostics_screen">
+      <UniqueIdentifier>5B0DEA8A-C646-66D7-127C-AEE9B05C7F78</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\gui\diagnostics_screen">
+      <UniqueIdentifier>A40A98A8-A890-163D-4680-2C35CAF34803</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\gui\waveform_screen">
+      <UniqueIdentifier>44E9D4AF-D260-0C52-1630-C05C3682B1AB</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\gui\calibration_screen">
+      <UniqueIdentifier>F2DD662F-C75B-96DD-35CF-A8ABD4676AC8</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\gui\calibration_screen">
+      <UniqueIdentifier>CBFC9BDE-12E9-9321-22A2-3B9794ED750F</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\generated\gui_generated\calibration_screen">
+      <UniqueIdentifier>AB669C1B-779D-B46D-16CB-6CC9421347A0</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\generated\gui_generated\calibration_screen">
+      <UniqueIdentifier>D5E076D0-144F-196F-CF70-7963E4ECFE2E</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\generated\gui_generated\settings_screen">
+      <UniqueIdentifier>79CEAD9D-A6E3-C94D-ED4E-4E2CA6024DDD</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\generated\gui_generated\settings_screen">
+      <UniqueIdentifier>4CD47D29-1F4C-BF0A-2E72-43AC6A97640C</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\generated\gui_generated\diagnostics_screen">
+      <UniqueIdentifier>B210F3AC-3587-DC64-8ADD-10B265DFE267</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\generated\gui_generated\waveform_screen">
+      <UniqueIdentifier>B1DA5313-8175-1CD8-7AD6-D5E4689D0FD0</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\generated\gui_generated\diagnostics_screen">
+      <UniqueIdentifier>56747986-ACA3-90CA-942A-0D26A2DE5624</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\generated\gui_generated\waveform_screen">
+      <UniqueIdentifier>C0D4E021-5DC0-B79F-D6DF-4910FC73002F</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(TouchGFXReleasePath)\framework\source\platform\driver\touch\SDL2TouchController.cpp">
@@ -224,6 +272,42 @@
     </ClCompile>
     <ClCompile Include="..\..\generated\simulator\src\video\SoftwareMJPEGDecoder.cpp">
       <Filter>Source Files\generated\simulator\video</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\gui\src\calibration_screen\calibrationPresenter.cpp">
+      <Filter>Source Files\gui\calibration_screen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\gui\src\calibration_screen\calibrationView.cpp">
+      <Filter>Source Files\gui\calibration_screen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\generated\gui_generated\src\calibration_screen\calibrationViewBase.cpp">
+      <Filter>Source Files\generated\gui_generated\calibration_screen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\gui\src\diagnostics_screen\diagnosticsPresenter.cpp">
+      <Filter>Source Files\gui\diagnostics_screen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\gui\src\diagnostics_screen\diagnosticsView.cpp">
+      <Filter>Source Files\gui\diagnostics_screen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\generated\gui_generated\src\diagnostics_screen\diagnosticsViewBase.cpp">
+      <Filter>Source Files\generated\gui_generated\diagnostics_screen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\gui\src\settings_screen\settingsPresenter.cpp">
+      <Filter>Source Files\gui\settings_screen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\gui\src\settings_screen\settingsView.cpp">
+      <Filter>Source Files\gui\settings_screen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\generated\gui_generated\src\settings_screen\settingsViewBase.cpp">
+      <Filter>Source Files\generated\gui_generated\settings_screen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\gui\src\waveform_screen\waveformPresenter.cpp">
+      <Filter>Source Files\gui\waveform_screen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\gui\src\waveform_screen\waveformView.cpp">
+      <Filter>Source Files\gui\waveform_screen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\generated\gui_generated\src\waveform_screen\waveformViewBase.cpp">
+      <Filter>Source Files\generated\gui_generated\waveform_screen</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -675,6 +759,42 @@
     </ClInclude>
     <ClInclude Include="..\..\generated\simulator\include\simulator\video\SoftwareMJPEGDecoder.hpp">
       <Filter>Header Files\generated\simulator\include\simulator\video</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\gui\include\gui\calibration_screen\calibrationPresenter.hpp">
+      <Filter>Header Files\gui\calibration_screen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\gui\include\gui\calibration_screen\calibrationView.hpp">
+      <Filter>Header Files\gui\calibration_screen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\calibration_screen\calibrationViewBase.hpp">
+      <Filter>Header Files\generated\gui_generated\calibration_screen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\gui\include\gui\diagnostics_screen\diagnosticsPresenter.hpp">
+      <Filter>Header Files\gui\diagnostics_screen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\gui\include\gui\diagnostics_screen\diagnosticsView.hpp">
+      <Filter>Header Files\gui\diagnostics_screen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\diagnostics_screen\diagnosticsViewBase.hpp">
+      <Filter>Header Files\generated\gui_generated\diagnostics_screen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\gui\include\gui\settings_screen\settingsPresenter.hpp">
+      <Filter>Header Files\gui\settings_screen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\gui\include\gui\settings_screen\settingsView.hpp">
+      <Filter>Header Files\gui\settings_screen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\settings_screen\settingsViewBase.hpp">
+      <Filter>Header Files\generated\gui_generated\settings_screen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\gui\include\gui\waveform_screen\waveformPresenter.hpp">
+      <Filter>Header Files\gui\waveform_screen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\gui\include\gui\waveform_screen\waveformView.hpp">
+      <Filter>Header Files\gui\waveform_screen</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\waveform_screen\waveformViewBase.hpp">
+      <Filter>Header Files\generated\gui_generated\waveform_screen</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

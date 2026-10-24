@@ -6,34 +6,427 @@
   <Texts>
     <TextGroup Id="Group1" />
     <TextGroup Id="Unsorted">
-      <Text Id="__SingleUse_OB8Y" Alignment="Left" TypographyId="Title">
+      <Text Id="__SingleUse_MTE8" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">PPS异常计数</Translation>
+      </Text>
+      <Text Id="__SingleUse_7PM0" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">同步状态</Translation>
+      </Text>
+      <Text Id="__SingleUse_4SHE" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">同步偏差</Translation>
+      </Text>
+      <Text Id="__SingleUse_X47M" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">角色／链路</Translation>
+      </Text>
+      <Text Id="__SingleUse_DK76" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">界面预览</Translation>
+      </Text>
+      <Text Id="__SingleUse_7GHV" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_JYG8" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_14FP" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">--</Translation>
+      </Text>
+      <Text Id="__SingleUse_9P60" Alignment="Right" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_5593" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_B4Q6" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">--</Translation>
+      </Text>
+      <Text Id="__SingleUse_CMKQ" Alignment="Right" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_ZMUM" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_XFEU" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">-- us</Translation>
+      </Text>
+      <Text Id="__SingleUse_0XYS" Alignment="Right" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_8QHV" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">BOARD -- / LINK --</Translation>
+      </Text>
+      <Text Id="__SingleUse_L8YZ" Alignment="Right" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_021V" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_J5CE" Alignment="Center" TypographyId="UI14">
+        <Translation Language="GB">结果</Translation>
+      </Text>
+      <Text Id="__SingleUse_J4UC" Alignment="Center" TypographyId="UI14">
+        <Translation Language="GB">音频</Translation>
+      </Text>
+      <Text Id="__SingleUse_1VQ7" Alignment="Center" TypographyId="UI14">
+        <Translation Language="GB">同步</Translation>
+      </Text>
+      <Text Id="__SingleUse_TTKG" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">BOARD --</Translation>
+      </Text>
+      <Text Id="__SingleUse_APLV" Alignment="Right" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_L6R0" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">SIM</Translation>
+      </Text>
+      <Text Id="__SingleUse_CK4L" Alignment="Left" TypographyId="UI16">
+        <Translation Language="GB">系统诊断</Translation>
+      </Text>
+      <Text Id="__SingleUse_AGIU" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">本板PCM，等待数据</Translation>
+      </Text>
+      <Text Id="__SingleUse_BJDT" Alignment="Center" TypographyId="UI14">
+        <Translation Language="GB">冻结</Translation>
+      </Text>
+      <Text Id="__SingleUse_F7SI" Alignment="Center" TypographyId="UI14">
+        <Translation Language="GB">幅度 自动</Translation>
+      </Text>
+      <Text Id="__SingleUse_SI0N" Alignment="Center" TypographyId="UI14">
+        <Translation Language="GB">时基 1 ms/格</Translation>
+      </Text>
+      <Text Id="__SingleUse_XN2U" Alignment="Right" TypographyId="UI14">
+        <Translation Language="GB">&lt;&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_Y1RC" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">&lt;&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_XMXJ" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">FS -- Hz</Translation>
+      </Text>
+      <Text Id="__SingleUse_8SBP" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_KYKA" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_4ZNN" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">SIM</Translation>
+      </Text>
+      <Text Id="__SingleUse_RG9K" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">BOARD --</Translation>
+      </Text>
+      <Text Id="__SingleUse_U02X" Alignment="Right" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_FCC3" Alignment="Left" TypographyId="UI16">
+        <Translation Language="GB">同步波形</Translation>
+      </Text>
+      <Text Id="__SingleUse_2OVQ" Alignment="Left" TypographyId="UI16">
+        <Translation Language="GB">标定检查 --</Translation>
+      </Text>
+      <Text Id="__SingleUse_Y62R" Alignment="Left" TypographyId="UI16">
+        <Translation Language="GB">候选偏置 -- us</Translation>
+      </Text>
+      <Text Id="__SingleUse_4YAF" Alignment="Left" TypographyId="UI16">
+        <Translation Language="GB">先量准声孔间距，再开始标定</Translation>
+      </Text>
+      <Text Id="__SingleUse_1HN4" Alignment="Left" TypographyId="UI16">
+        <Translation Language="GB">B侧有效 0/5</Translation>
+      </Text>
+      <Text Id="__SingleUse_8S1Z" Alignment="Left" TypographyId="UI16">
+        <Translation Language="GB">A侧有效 0/5</Translation>
+      </Text>
+      <Text Id="__SingleUse_UG1B" Alignment="Left" TypographyId="UI16">
+        <Translation Language="GB">未应用</Translation>
+      </Text>
+      <Text Id="__SingleUse_HEWO" Alignment="Center" TypographyId="UI16">
+        <Translation Language="GB">保存标定</Translation>
+      </Text>
+      <Text Id="__SingleUse_DKWM" Alignment="Center" TypographyId="UI16">
+        <Translation Language="GB">取消</Translation>
+      </Text>
+      <Text Id="__SingleUse_ZFXM" Alignment="Center" TypographyId="UI16">
+        <Translation Language="GB">开始标定</Translation>
+      </Text>
+      <Text Id="__SingleUse_Z93Z" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_31T5" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_TB4E" Alignment="Left" TypographyId="UI16">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_0U33" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_G9P0" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_8ZEG" Alignment="Right" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_GOPJ" Alignment="Center" TypographyId="UI14">
+        <Translation Language="GB">+</Translation>
+      </Text>
+      <Text Id="__SingleUse_1S12" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">m</Translation>
+      </Text>
+      <Text Id="__SingleUse_YDSO" Alignment="Left" TypographyId="UI16">
+        <Translation Language="GB">0.500</Translation>
+      </Text>
+      <Text Id="__SingleUse_1UAC" Alignment="Center" TypographyId="UI16">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_OK5L" Alignment="Center" TypographyId="UI14">
+        <Translation Language="GB">-</Translation>
+      </Text>
+      <Text Id="__SingleUse_FLDC" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">声孔间距</Translation>
+      </Text>
+      <Text Id="__SingleUse_JWGH" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">SIM</Translation>
+      </Text>
+      <Text Id="__SingleUse_MYIF" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">BOARD --</Translation>
+      </Text>
+      <Text Id="__SingleUse_S3PU" Alignment="Right" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_2S8F" Alignment="Left" TypographyId="UI16">
+        <Translation Language="GB">界面预览</Translation>
+      </Text>
+      <Text Id="__SingleUse_7IHG" Alignment="Left" TypographyId="UI16">
+        <Translation Language="GB">声速 343.42 m/s</Translation>
+      </Text>
+      <Text Id="__SingleUse_88HI" Alignment="Left" TypographyId="UI16">
+        <Translation Language="GB">20.0</Translation>
+      </Text>
+      <Text Id="__SingleUse_0UHI" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_C29X" Alignment="Center" TypographyId="UI16">
+        <Translation Language="GB">应用到双板</Translation>
+      </Text>
+      <Text Id="__SingleUse_4CCC" Alignment="Center" TypographyId="UI14">
+        <Translation Language="GB">厘米 cm</Translation>
+      </Text>
+      <Text Id="__SingleUse_TAI6" Alignment="Center" TypographyId="UI14">
+        <Translation Language="GB">米 m</Translation>
+      </Text>
+      <Text Id="__SingleUse_9VNT" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">显示单位</Translation>
+      </Text>
+      <Text Id="__SingleUse_HGTP" Alignment="Center" TypographyId="UI14">
+        <Translation Language="GB">击掌</Translation>
+      </Text>
+      <Text Id="__SingleUse_4190" Alignment="Center" TypographyId="UI14">
+        <Translation Language="GB">音频</Translation>
+      </Text>
+      <Text Id="__SingleUse_I5V4" Alignment="Center" TypographyId="UI14">
+        <Translation Language="GB">自动</Translation>
+      </Text>
+      <Text Id="__SingleUse_20DL" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">测量模式</Translation>
+      </Text>
+      <Text Id="__SingleUse_QAIP" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_BO6E" Alignment="Center" TypographyId="UI14">
+        <Translation Language="GB">+</Translation>
+      </Text>
+      <Text Id="__SingleUse_9S09" Alignment="Left" TypographyId="UI16">
+        <Translation Language="GB">℃</Translation>
+      </Text>
+      <Text Id="__SingleUse_DEEI" Alignment="Center" TypographyId="UI16">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_3WF4" Alignment="Center" TypographyId="UI14">
+        <Translation Language="GB">-</Translation>
+      </Text>
+      <Text Id="__SingleUse_X9XO" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">温度值</Translation>
+      </Text>
+      <Text Id="__SingleUse_JFVK" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">自动：无传感器</Translation>
+      </Text>
+      <Text Id="__SingleUse_5AO8" Alignment="Center" TypographyId="UI14">
+        <Translation Language="GB">自动</Translation>
+      </Text>
+      <Text Id="__SingleUse_EP96" Alignment="Center" TypographyId="UI14">
+        <Translation Language="GB">手动</Translation>
+      </Text>
+      <Text Id="__SingleUse_NT8R" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">温度来源</Translation>
+      </Text>
+      <Text Id="__SingleUse_VPDT" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">SIM</Translation>
+      </Text>
+      <Text Id="__SingleUse_P9TO" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">BOARD --</Translation>
+      </Text>
+      <Text Id="__SingleUse_WLN9" Alignment="Right" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_80CQ" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">等待数据</Translation>
+      </Text>
+      <Text Id="__SingleUse_GKQS" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">标定 未应用</Translation>
+      </Text>
+      <Text Id="__SingleUse_NAH9" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">声速 -- m/s</Translation>
+      </Text>
+      <Text Id="__SingleUse_3WVY" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">温度 --.- ℃</Translation>
+      </Text>
+      <Text Id="__SingleUse_WNJI" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">峰差 --</Translation>
+      </Text>
+      <Text Id="__SingleUse_03WA" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">相关 --</Translation>
+      </Text>
+      <Text Id="__SingleUse_QX07" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">ID -- TYPE --</Translation>
+      </Text>
+      <Text Id="__SingleUse_83M6" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">偏差 -- us</Translation>
+      </Text>
+      <Text Id="__SingleUse_NDAN" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_VS5D" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_TU22" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_R9UV" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_9LX5" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_X5NE" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_IK33" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_CBLW" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">SIM</Translation>
+      </Text>
+      <Text Id="__SingleUse_CUQG" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_XVQ6" Alignment="Center" TypographyId="UI16">
+        <Translation Language="GB">测距</Translation>
+      </Text>
+      <Text Id="__SingleUse_4T8S" Alignment="Center" TypographyId="UI16">
+        <Translation Language="GB">设置</Translation>
+      </Text>
+      <Text Id="__SingleUse_3B63" Alignment="Center" TypographyId="UI16">
+        <Translation Language="GB">标定</Translation>
+      </Text>
+      <Text Id="__SingleUse_U0LJ" Alignment="Center" TypographyId="UI16">
+        <Translation Language="GB">波形</Translation>
+      </Text>
+      <Text Id="__SingleUse_B6RE" Alignment="Center" TypographyId="UI16">
+        <Translation Language="GB">诊断</Translation>
+      </Text>
+      <Text Id="__SingleUse_VNTO" Alignment="Center" TypographyId="UI16">
+        <Translation Language="GB">测距</Translation>
+      </Text>
+      <Text Id="__SingleUse_HQTP" Alignment="Center" TypographyId="UI16">
+        <Translation Language="GB">设置</Translation>
+      </Text>
+      <Text Id="__SingleUse_HAXP" Alignment="Center" TypographyId="UI16">
+        <Translation Language="GB">标定</Translation>
+      </Text>
+      <Text Id="__SingleUse_HFSO" Alignment="Center" TypographyId="UI16">
+        <Translation Language="GB">波形</Translation>
+      </Text>
+      <Text Id="__SingleUse_1VEA" Alignment="Center" TypographyId="UI16">
+        <Translation Language="GB">诊断</Translation>
+      </Text>
+      <Text Id="__SingleUse_MCLS" Alignment="Center" TypographyId="UI16">
+        <Translation Language="GB">测距</Translation>
+      </Text>
+      <Text Id="__SingleUse_LC52" Alignment="Center" TypographyId="UI16">
+        <Translation Language="GB">设置</Translation>
+      </Text>
+      <Text Id="__SingleUse_ARR3" Alignment="Center" TypographyId="UI16">
+        <Translation Language="GB">标定</Translation>
+      </Text>
+      <Text Id="__SingleUse_9YMD" Alignment="Center" TypographyId="UI16">
+        <Translation Language="GB">波形</Translation>
+      </Text>
+      <Text Id="__SingleUse_O7EL" Alignment="Center" TypographyId="UI16">
+        <Translation Language="GB">诊断</Translation>
+      </Text>
+      <Text Id="__SingleUse_ZMOW" Alignment="Center" TypographyId="UI16">
+        <Translation Language="GB">测距</Translation>
+      </Text>
+      <Text Id="__SingleUse_YDEJ" Alignment="Center" TypographyId="UI16">
+        <Translation Language="GB">设置</Translation>
+      </Text>
+      <Text Id="__SingleUse_53TQ" Alignment="Center" TypographyId="UI16">
+        <Translation Language="GB">标定</Translation>
+      </Text>
+      <Text Id="__SingleUse_GT6C" Alignment="Center" TypographyId="UI16">
+        <Translation Language="GB">波形</Translation>
+      </Text>
+      <Text Id="__SingleUse_K39B" Alignment="Center" TypographyId="UI16">
+        <Translation Language="GB">诊断</Translation>
+      </Text>
+      <Text Id="__SingleUse_QD32" Alignment="Center" TypographyId="UI16">
+        <Translation Language="GB">诊断</Translation>
+      </Text>
+      <Text Id="__SingleUse_IJU7" Alignment="Center" TypographyId="UI16">
+        <Translation Language="GB">波形</Translation>
+      </Text>
+      <Text Id="__SingleUse_2VAX" Alignment="Center" TypographyId="UI16">
+        <Translation Language="GB">标定</Translation>
+      </Text>
+      <Text Id="__SingleUse_VNCR" Alignment="Center" TypographyId="UI16">
+        <Translation Language="GB">设置</Translation>
+      </Text>
+      <Text Id="__SingleUse_NH1C" Alignment="Center" TypographyId="UI16">
+        <Translation Language="GB">测距</Translation>
+      </Text>
+      <Text Id="__SingleUse_K2HU" Alignment="Left" TypographyId="UI16">
+        <Translation Language="GB">单点标定</Translation>
+      </Text>
+      <Text Id="__SingleUse_EMUO" Alignment="Left" TypographyId="UI16">
+        <Translation Language="GB">参数设置</Translation>
+      </Text>
+      <Text Id="__SingleUse_OB8Y" Alignment="Left" TypographyId="UI14">
         <Translation Language="GB">Q 0.0% OK 0 REJECT 0</Translation>
       </Text>
-      <Text Id="__SingleUse_0T6J" Alignment="Left" TypographyId="Title">
+      <Text Id="__SingleUse_0T6J" Alignment="Left" TypographyId="UI14">
         <Translation Language="GB">WAIT SYNC ID 0</Translation>
       </Text>
-      <Text Id="__SingleUse_8SSI" Alignment="Left" TypographyId="Title">
+      <Text Id="__SingleUse_8SSI" Alignment="Left" TypographyId="UI16">
         <Translation Language="GB">SOURCE -</Translation>
       </Text>
       <Text Id="__SingleUse_NB2P" Alignment="Left" TypographyId="Title">
         <Translation Language="GB">-.--- M</Translation>
       </Text>
-      <Text Id="__SingleUse_OO4F" Alignment="Left" TypographyId="Title">
+      <Text Id="__SingleUse_OO4F" Alignment="Left" TypographyId="UI14">
         <Translation Language="GB">BOARD - WAIT SYNC</Translation>
       </Text>
-      <Text Id="__SingleUse_WW3N" Alignment="Left" TypographyId="Title">
+      <Text Id="__SingleUse_WW3N" Alignment="Left" TypographyId="UI14">
         <Translation Language="GB">&lt;value&gt;</Translation>
       </Text>
-      <Text Id="__SingleUse_4RE8" Alignment="Left" TypographyId="Title">
+      <Text Id="__SingleUse_4RE8" Alignment="Left" TypographyId="UI14">
         <Translation Language="GB">&lt;value&gt;</Translation>
       </Text>
-      <Text Id="__SingleUse_VOJC" Alignment="Left" TypographyId="Default">
+      <Text Id="__SingleUse_VOJC" Alignment="Left" TypographyId="UI16">
         <Translation Language="GB">&lt;value&gt;</Translation>
       </Text>
       <Text Id="__SingleUse_BQUD" Alignment="Left" TypographyId="Large">
         <Translation Language="GB">&lt;value&gt;</Translation>
       </Text>
-      <Text Id="__SingleUse_0GWM" Alignment="Left" TypographyId="Default">
+      <Text Id="__SingleUse_0GWM" Alignment="Left" TypographyId="UI14">
         <Translation Language="GB">&lt;value&gt;</Translation>
       </Text>
       <Text Id="__SingleUse_AU9C" Alignment="Left" TypographyId="Title">
@@ -46,5 +439,7 @@
     <Typography Id="Large" Font="verdana.ttf" Size="40" Bpp="4" IsVector="no" Direction="LTR" FallbackCharacter="?" WildcardCharacters="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 .-%" />
     <Typography Id="Small" Font="verdana.ttf" Size="10" Bpp="4" IsVector="no" Direction="LTR" FallbackCharacter="?" />
     <Typography Id="Title" Font="verdana.ttf" Size="16" Bpp="4" IsVector="no" Direction="LTR" FallbackCharacter="?" WildcardCharacters="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 .-%" />
+    <Typography Id="UI14" Font="HYJiangNan.TTF" Size="14" Bpp="4" IsVector="no" Direction="LTR" FallbackCharacter="?" WildcardCharacters="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz .,:;+-/%()_μ℃—偏差相关峰差温度声速标定未应用本次上次有效结果等待同步声音数据音频击掌拒绝模拟秒前界面预览侧候选置检查" WidgetWildcardCharacters="-., 0123456789" />
+    <Typography Id="UI16" Font="HYJiangNan.TTF" Size="16" Bpp="4" IsVector="no" Direction="LTR" FallbackCharacter="?" WildcardCharacters="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz .,:;+-/%()_μ℃—偏差相关峰差温度声速标定未应用本次上次有效结果等待同步声音数据音频击掌拒绝模拟秒前" />
   </Typographies>
 </TextDatabase>
