@@ -43,6 +43,7 @@ bool ArrivalDetector_Push(ArrivalDetector *d, int16_t pcm,
         if (magnitude > d->peak) d->peak = magnitude;
         if (magnitude >= d->threshold) d->hits++;
         int32_t sign = filtered >= 0 ? 1 : -1;
+
         if (sign != d->previous_sign) d->crossings++;
         d->previous_sign = sign;
         if (d->candidate_age >= CONFIRM_SAMPLES) {

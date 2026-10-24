@@ -2,6 +2,8 @@
 #include "sync_core.h"
 #include "sync_port.h"
 #include "sync_format.h"
+#include "Port/sync_log.h"
+#include "Ranging/ranging.h"
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
@@ -15,6 +17,9 @@ static struct {
     int64_t peer_offset;
     uint32_t peer_delay;
     SyncServo servo;
+    bool log_valid;
+    TimeSyncRole logged_role;
+    TimeSyncState logged_state;
 } app;
 static const uint8_t broadcast[6]={255,255,255,255,255,255};
 
@@ -42,6 +47,11 @@ static void clear_peer(void) {
     if(!SyncPort_Correct(0,0)) app.ready=false;
 }
 static void receive(const SyncRxPacket *p, uint32_t now) {
+    if (Range_IsPacket(p->payload)) {
+        if (app.peer && memcmp(p->source_mac, app.peer_mac, 6) == 0)
+            Ranging_Receive(p->payload);
+        return;
+    }
     SyncMessage m;
     if(!Sync_Decode(&m,p->payload,SYNC_WIRE_SIZE) || !memcmp(m.uid,app.uid,12)) return;
     if(m.type==SYNC_HELLO) {
@@ -99,9 +109,13 @@ void SyncApp_Init(void) {
     app.ready=SyncPort_Init(app.uid,app.mac);
     app.session=SyncPort_Session();
     app.hello_ms=SyncPort_Millis()-500U;
+#if APP_LOG_VERBOSE
     SyncPort_Log("\r\nDistributed time sync / TouchGFX + FreeRTOS\r\n"
                  "PPS: ETH target -> TIM2 one-pulse -> D9 / PA15, 1 ms; UART1: 1152000 8N1\r\n"
                  "Private L2 protocol 0x88B5; hardware TX/RX timestamps\r\n");
+#else
+    SyncPort_Log("\r\nBOOT acoustic ranging; UART 1152000\r\n");
+#endif
     if(!app.ready) SyncPort_Log("ERROR: ETH/PHY/PTP initialization failed; reset after checking power/clock\r\n");
 }
 void SyncApp_Poll(void) {
@@ -114,6 +128,9 @@ void SyncApp_Poll(void) {
         if(!app.master && app.servo.valid && now-app.sample_ms>500U) {
             app.servo.valid=false; app.servo.locked=false; app.servo.good_run=0;
         }
+        bool range_locked = app.ready && app.link && app.peer &&
+                            (app.master ? app.peer_locked : app.servo.locked);
+        Ranging_SetLink(app.master, range_locked, app.session, app.peer_session);
         SyncRxPacket p;
         for(unsigned i=0;i<16 && app.link && SyncPort_Receive(&p);i++) receive(&p,now);
         if(app.link && now-app.hello_ms>=500U) {
@@ -130,14 +147,25 @@ void SyncApp_Poll(void) {
     }
     bool locked=app.ready && app.link && app.peer &&
                 (app.master ? app.peer_locked : app.servo.locked);
+    Ranging_SetLink(app.master, locked, app.session, app.peer_session);
+    Ranging_Poll();
     SyncPort_Led(locked);
-    if(now-app.log_ms>=1000U) {
-        app.log_ms=now; char line[384];
-        uint32_t rises,falls,high_seen,low_seen,missed;
-        SyncPort_PpsStats(&rises,&falls,&high_seen,&low_seen,&missed);
+    TimeSyncRole log_role = !app.peer ? TIME_SYNC_DISCOVERY :
+                            app.master ? TIME_SYNC_MASTER : TIME_SYNC_SLAVE;
+    TimeSyncState log_state = !app.ready ? TIME_SYNC_ERROR : !app.link ? TIME_SYNC_LINK_DOWN :
+                              !app.peer ? TIME_SYNC_WAIT_PEER : locked ?
+                              TIME_SYNC_LOCKED_ESTIMATE : TIME_SYNC_ACQUIRING;
+    if (!app.log_valid || log_role != app.logged_role || log_state != app.logged_state ||
+        (APP_LOG_VERBOSE && now-app.log_ms>=1000U)) {
+        app.log_ms=now; app.log_valid=true;
+        app.logged_role=log_role; app.logged_state=log_state;
         const char *role=app.peer ? (app.master ? "MASTER(A)" : "SLAVE(B)") : "DISCOVERY";
         const char *state=!app.ready ? "ERROR" : !app.link ? "LINK_DOWN" :
                           !app.peer ? "WAIT_PEER" : locked ? "LOCKED_ESTIMATE" : "ACQUIRING";
+#if APP_LOG_VERBOSE
+        char line[384];
+        uint32_t rises,falls,high_seen,low_seen,missed;
+        SyncPort_PpsStats(&rises,&falls,&high_seen,&low_seen,&missed);
         bool valid=app.peer && (app.master ? app.peer_valid : app.servo.valid);
         int64_t offset=app.master ? app.peer_offset : app.servo.offset_ns;
         uint32_t delay=app.master ? app.peer_delay : app.servo.delay_ns;
@@ -151,8 +179,19 @@ void SyncApp_Poll(void) {
             now,role,state,valid?"VALID":"NONE",offset_text,delay,app.servo.frequency_ppb,
             app.servo.samples,app.servo.rejected,app.tx_failures,app.rx_count,
             rises,falls,high_seen,low_seen,missed);
+#else
+        char line[80];
+        snprintf(line,sizeof(line),"SYNC role=%s state=%s\r\n",role,state);
+#endif
         SyncPort_Log(line);
     }
+}
+
+bool SyncApp_SendApplication(const uint8_t payload[56]) {
+    if (!app.ready || !app.link || !app.peer) return false;
+    bool ok = SyncPort_Send(app.peer_mac, payload, false, NULL);
+    if (!ok) app.tx_failures++;
+    return ok;
 }
 
 void SyncApp_GetStatus(TimeSyncStatus *status) {

@@ -2,6 +2,7 @@
 #define APP_AUDIO_ARRIVAL_H
 #include <stdbool.h>
 #include <stdint.h>
+#include "Ranging/range_core.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -18,6 +19,8 @@ typedef struct {
 void AudioArrival_Init(void);
 /* Task-context snapshot of the latest accepted event. */
 bool AudioArrival_GetLatest(AudioArrivalEvent *event);
+/* Consumes a completed, contiguous short PCM capture. Task context only. */
+bool AudioArrival_TakeCapture(RangeCapture *capture);
 
 void audio_task(void const *argument);
 

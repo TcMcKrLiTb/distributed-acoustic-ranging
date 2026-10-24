@@ -1,5 +1,6 @@
 add_subdirectory(TimeSync)
 add_subdirectory(AudioArrival)
+add_subdirectory(Ranging)
 
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/app.c

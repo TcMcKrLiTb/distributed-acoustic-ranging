@@ -18,13 +18,99 @@
           {
             "Type": "Button",
             "Name": "button1",
-            "X": 190,
-            "Y": 118,
+            "X": 370,
+            "Y": 232,
             "Width": 100,
             "Height": 36,
             "Pressed": "__generated\\alternate_theme_images_widgets_button_regular_height_36_tiny_rounded_pressed.png",
             "Released": "__generated\\alternate_theme_images_widgets_button_regular_height_36_tiny_rounded_active.png",
             "Preset": "alternate_theme\\presets\\button\\regular\\height_36\\tiny_rounded_active.json"
+          },
+          {
+            "Type": "TextArea",
+            "Name": "titleText",
+            "X": 14,
+            "Y": 8,
+            "Width": 288,
+            "Height": 19,
+            "TextId": "__SingleUse_AU9C",
+            "TextRotation": "0",
+            "AutoSize": true
+          },
+          {
+            "Type": "TextArea",
+            "Name": "boardStatusText",
+            "X": 14,
+            "Y": 37,
+            "Width": 452,
+            "Height": 24,
+            "TextId": "__SingleUse_0GWM",
+            "TextRotation": "0",
+            "Wildcard1": {
+              "TextId": "__SingleUse_OO4F",
+              "UseBuffer": true,
+              "BufferSize": 64
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "distanceText",
+            "X": 14,
+            "Y": 85,
+            "Width": 452,
+            "Height": 48,
+            "TextId": "__SingleUse_BQUD",
+            "TextRotation": "0",
+            "Wildcard1": {
+              "TextId": "__SingleUse_NB2P",
+              "UseBuffer": true,
+              "BufferSize": 32
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "directionText",
+            "X": 14,
+            "Y": 144,
+            "Width": 452,
+            "Height": 24,
+            "TextId": "__SingleUse_VOJC",
+            "TextRotation": "0",
+            "Wildcard1": {
+              "TextId": "__SingleUse_8SSI",
+              "UseBuffer": true,
+              "BufferSize": 32
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "rangeStateText",
+            "X": 14,
+            "Y": 180,
+            "Width": 452,
+            "Height": 19,
+            "TextId": "__SingleUse_4RE8",
+            "TextRotation": "0",
+            "Wildcard1": {
+              "TextId": "__SingleUse_0T6J",
+              "UseBuffer": true,
+              "BufferSize": 64
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "statisticsText",
+            "X": 14,
+            "Y": 210,
+            "Width": 452,
+            "Height": 19,
+            "TextId": "__SingleUse_WW3N",
+            "TextRotation": "0",
+            "Wildcard1": {
+              "TextId": "__SingleUse_OB8Y",
+              "UseBuffer": true,
+              "BufferSize": 64
+            }
           }
         ],
         "Interactions": [

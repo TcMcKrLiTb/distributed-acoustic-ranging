@@ -11,9 +11,9 @@ public:
     virtual ~screenView() {}
     virtual void setupScreen();
     virtual void tearDownScreen();
+    virtual void handleTickEvent();
 
     void button1Clicked() override;
-protected:
 };
 
 #endif // SCREENVIEW_HPP
