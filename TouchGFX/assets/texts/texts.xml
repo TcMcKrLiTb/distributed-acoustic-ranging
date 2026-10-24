@@ -6,6 +6,81 @@
   <Texts>
     <TextGroup Id="Group1" />
     <TextGroup Id="Unsorted">
+      <Text Id="__SingleUse_2S8F" Alignment="Left" TypographyId="UI16">
+        <Translation Language="GB">界面预览</Translation>
+      </Text>
+      <Text Id="__SingleUse_7IHG" Alignment="Left" TypographyId="UI16">
+        <Translation Language="GB">声速 343.42 m/s</Translation>
+      </Text>
+      <Text Id="__SingleUse_88HI" Alignment="Left" TypographyId="UI16">
+        <Translation Language="GB">20.0</Translation>
+      </Text>
+      <Text Id="__SingleUse_0UHI" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_C29X" Alignment="Center" TypographyId="UI16">
+        <Translation Language="GB">应用到双板</Translation>
+      </Text>
+      <Text Id="__SingleUse_4CCC" Alignment="Center" TypographyId="UI14">
+        <Translation Language="GB">厘米 cm</Translation>
+      </Text>
+      <Text Id="__SingleUse_TAI6" Alignment="Center" TypographyId="UI14">
+        <Translation Language="GB">米 m</Translation>
+      </Text>
+      <Text Id="__SingleUse_9VNT" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">显示单位</Translation>
+      </Text>
+      <Text Id="__SingleUse_HGTP" Alignment="Center" TypographyId="UI14">
+        <Translation Language="GB">击掌</Translation>
+      </Text>
+      <Text Id="__SingleUse_4190" Alignment="Center" TypographyId="UI14">
+        <Translation Language="GB">音频</Translation>
+      </Text>
+      <Text Id="__SingleUse_I5V4" Alignment="Center" TypographyId="UI14">
+        <Translation Language="GB">自动</Translation>
+      </Text>
+      <Text Id="__SingleUse_20DL" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">测量模式</Translation>
+      </Text>
+      <Text Id="__SingleUse_QAIP" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_BO6E" Alignment="Center" TypographyId="UI14">
+        <Translation Language="GB">+</Translation>
+      </Text>
+      <Text Id="__SingleUse_9S09" Alignment="Left" TypographyId="UI16">
+        <Translation Language="GB">℃</Translation>
+      </Text>
+      <Text Id="__SingleUse_DEEI" Alignment="Center" TypographyId="UI16">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
+      <Text Id="__SingleUse_3WF4" Alignment="Center" TypographyId="UI14">
+        <Translation Language="GB">-</Translation>
+      </Text>
+      <Text Id="__SingleUse_X9XO" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">温度值</Translation>
+      </Text>
+      <Text Id="__SingleUse_JFVK" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">自动：无传感器</Translation>
+      </Text>
+      <Text Id="__SingleUse_5AO8" Alignment="Center" TypographyId="UI14">
+        <Translation Language="GB">自动</Translation>
+      </Text>
+      <Text Id="__SingleUse_EP96" Alignment="Center" TypographyId="UI14">
+        <Translation Language="GB">手动</Translation>
+      </Text>
+      <Text Id="__SingleUse_NT8R" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">温度来源</Translation>
+      </Text>
+      <Text Id="__SingleUse_VPDT" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">SIM</Translation>
+      </Text>
+      <Text Id="__SingleUse_P9TO" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">BOARD --</Translation>
+      </Text>
+      <Text Id="__SingleUse_WLN9" Alignment="Right" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
       <Text Id="__SingleUse_80CQ" Alignment="Left" TypographyId="UI14">
         <Translation Language="GB">等待数据</Translation>
       </Text>
@@ -141,8 +216,8 @@
       <Text Id="__SingleUse_K2HU" Alignment="Left" TypographyId="Default">
         <Translation Language="GB">CALIBRATION</Translation>
       </Text>
-      <Text Id="__SingleUse_EMUO" Alignment="Left" TypographyId="Default">
-        <Translation Language="GB">SETTINGS</Translation>
+      <Text Id="__SingleUse_EMUO" Alignment="Left" TypographyId="UI16">
+        <Translation Language="GB">参数设置</Translation>
       </Text>
       <Text Id="__SingleUse_OB8Y" Alignment="Left" TypographyId="UI14">
         <Translation Language="GB">Q 0.0% OK 0 REJECT 0</Translation>
