@@ -17,6 +17,7 @@ void setText(touchgfx::TextAreaWithOneWildcard& widget,
            buffer[i] == static_cast<touchgfx::Unicode::UnicodeChar>(text[i]))
     {
         ++i;
+
     }
     if (!text[i] && buffer[i] == 0)
     {
