@@ -1,5 +1,6 @@
 #include "ranging.h"
 #include "range_config.h"
+#include "range_temperature.h"
 #include "AudioArrival/audio_arrival.h"
 #include "TimeSync/time_sync.h"
 #include "TimeSync/sync_app.h"
@@ -14,6 +15,8 @@
 #define RETRY_MS 12U
 #define TRANSACTION_MS 1500U
 #define DISPLAY_LEAD_NS 250000000ULL
+#define CONFIG_RETRY_MS 100U
+#define CONFIG_HEARTBEAT_MS 500U
 typedef enum { IDLE, META_TX, DATA_TX, DATA_RX, DSP, RESULT_TX, DISPLAY_WAIT, RESULT_WAIT } Stage;
 typedef enum { JOB_IDLE, JOB_RUNNING, JOB_DONE } JobState;
 
@@ -33,13 +36,33 @@ static uint32_t local_session, remote_session, active_generation, last_sequence;
 static uint32_t started_ms, sent_ms, next_result_id;
 static uint16_t transferred;
 static Stage stage;
-static const RangeConfig config = {RANGE_SOUND_SPEED_MM_S, RANGE_RELATIVE_BIAS_NS};
+static RangeConfig config = {RANGE_SOUND_SPEED_MM_S, RANGE_RELATIVE_BIAS_NS};
+static RangeConfig job_config;
+static uint32_t job_config_revision;
+static RangingTemperatureStatus temperature = {
+    RANGE_TEMPERATURE_DEFAULT_X10, RANGE_SOUND_SPEED_MM_S, 1U, false, false
+}, published_temperature;
+/* GUI writes only this mailbox. Everything else is owned by SyncTask. */
+static bool request_queued, local_request_pending, config_known;
+static int16_t queued_temperature, requested_temperature;
+static uint32_t next_request_id, pending_request_id, peer_request_ack;
+static uint32_t config_sent_ms, request_sent_ms;
+static bool have_accepted_delay;
+static int64_t accepted_delay_ns;
+
+static void reset_transaction(void);
+static bool send_packet(RangePacket *packet);
+static void poll_temperature(uint32_t ms);
 
 static void publish(void) {
-    taskENTER_CRITICAL(); published = status; taskEXIT_CRITICAL();
+    taskENTER_CRITICAL();
+    published = status;
+    temperature.pending = local_request_pending || request_queued;
+    published_temperature = temperature;
+    taskEXIT_CRITICAL();
 }
 static void run_job(void) {
-    job_success = Range_Estimate(&local_capture, &remote_capture, &config, &job_result);
+    job_success = Range_Estimate(&local_capture, &remote_capture, &job_config, &job_result);
     taskENTER_CRITICAL(); job_state = JOB_DONE; taskEXIT_CRITICAL();
 }
 static void work(void *argument) {
@@ -61,21 +84,50 @@ bool Ranging_GetStatus(RangingStatus *out) {
     taskENTER_CRITICAL(); *out = published; taskEXIT_CRITICAL();
     return initialized;
 }
+bool Ranging_GetTemperature(RangingTemperatureStatus *out) {
+    if (!out) return false;
+    taskENTER_CRITICAL(); *out = published_temperature; taskEXIT_CRITICAL();
+    return initialized;
+}
+bool Ranging_SetTemperature(int16_t value) {
+    if (!Range_TemperatureSoundSpeed(value)) return false;
+    taskENTER_CRITICAL();
+    bool accepted = initialized && published.locked && published_temperature.synchronized &&
+                    !published_temperature.pending && !request_queued;
+    if (accepted) {
+        queued_temperature = value;
+        request_queued = true;
+        published_temperature.pending = true;
+    }
+    taskEXIT_CRITICAL();
+    return accepted;
+}
 static void reset_transaction(void) {
     stage = IDLE; local_valid = false; remote_valid = false; transferred = 0;
     result_acked = false;
     status.state = link_locked ? RANGING_WAIT_SOUND : RANGING_WAIT_SYNC;
 }
 void Ranging_SetLink(bool master, bool locked, uint32_t session, uint32_t peer_session) {
-    bool changed = !context_valid || master != link_master || session != local_session ||
-                   peer_session != remote_session || (link_locked && !locked);
+    bool new_context = !context_valid || master != link_master || session != local_session ||
+                       peer_session != remote_session;
+    bool changed = new_context || (link_locked && !locked);
     link_master = master; link_locked = locked;
     local_session = session; remote_session = peer_session; context_valid = true;
     status.master = master; status.locked = locked;
     if (changed) {
         discard_job = job_state != JOB_IDLE;
         reset_transaction(); status.valid = false;
+        have_accepted_delay = false;
         active_generation = UINT32_MAX;
+        temperature.synchronized = false;
+        config_sent_ms = xTaskGetTickCount() - CONFIG_HEARTBEAT_MS;
+        request_sent_ms = xTaskGetTickCount() - CONFIG_RETRY_MS;
+        if (new_context) {
+            config_known = master;
+            peer_request_ack = 0;
+            local_request_pending = false;
+            taskENTER_CRITICAL(); request_queued = false; taskEXIT_CRITICAL();
+        }
     }
     if (!locked) status.state = RANGING_WAIT_SYNC;
     else if (stage == IDLE && !remote_valid) status.state = RANGING_WAIT_SOUND;
@@ -85,6 +137,144 @@ static bool send_packet(RangePacket *p) {
     p->session = local_session;
     Range_Encode(bytes, p);
     return SyncApp_SendApplication(bytes);
+}
+static bool newer(uint32_t a, uint32_t b) {
+    uint32_t difference = a - b;
+    return difference != 0U && difference < 0x80000000U;
+}
+static void send_temperature(void) {
+    RangePacket packet = {0};
+    packet.type = RANGE_CONFIG_STATE;
+    packet.sequence = temperature.revision;
+    packet.temperature_c_x10 = temperature.temperature_c_x10;
+    packet.request_ack = peer_request_ack;
+    /* A temperature change also reconciles the cached measurement. The old
+       scheduled RESULT may have reached only one display before the edit. */
+    if (have_accepted_delay) {
+        packet.flags = 1U;
+        packet.delay_ns = accepted_delay_ns;
+        packet.a_sequence = status.sequence;
+        packet.quality_permille = status.quality_permille;
+    }
+    send_packet(&packet);
+    config_sent_ms = xTaskGetTickCount();
+}
+static void revalue_distance(void) {
+    if (!have_accepted_delay) return;
+    /* This time difference already has the relative input bias removed. */
+    uint64_t delay = (uint64_t)(accepted_delay_ns < 0 ? -accepted_delay_ns : accepted_delay_ns);
+    status.distance_mm = (uint32_t)((delay * config.sound_speed_mm_s + 500000000ULL) / 1000000000ULL);
+    status.valid = status.distance_mm >= RANGE_MIN_MM - RANGE_EDGE_GUARD_MM &&
+                   status.distance_mm <= RANGE_MAX_MM + RANGE_EDGE_GUARD_MM;
+    status.last_error = status.valid ? RANGE_OK : RANGE_OUT_OF_RANGE;
+    char line[176], delta[SYNC_I64_TEXT_SIZE];
+    SyncFormat_I64(delta, accepted_delay_ns);
+    snprintf(line, sizeof(line), "TEMP RECALC id=%" PRIu32 " rev=%" PRIu32
+             " distance_mm=%" PRIu32 " valid=%u dt_ns=%s\r\n", status.sequence,
+             temperature.revision, status.distance_mm, status.valid ? 1U : 0U, delta);
+    SyncLog_Write(line);
+}
+static void apply_temperature(int16_t value, uint32_t revision) {
+    /* A running worker retains its captures and immutable configuration until
+       JOB_DONE. No packet from the canceled measurement can publish afterward. */
+    discard_job = job_state != JOB_IDLE;
+    reset_transaction();
+    temperature.temperature_c_x10 = value;
+    temperature.sound_speed_mm_s = Range_TemperatureSoundSpeed(value);
+    temperature.revision = revision;
+    temperature.synchronized = false;
+    config.sound_speed_mm_s = temperature.sound_speed_mm_s;
+    config_known = true;
+    revalue_distance();
+    char line[128];
+    snprintf(line, sizeof(line), "TEMP APPLY rev=%" PRIu32 " temp_x10=%d c_mm_s=%" PRIu32 "\r\n",
+             revision, (int)value, temperature.sound_speed_mm_s);
+    SyncLog_Write(line);
+}
+static void master_temperature(int16_t value) {
+    uint32_t revision = temperature.revision + 1U;
+    if (!revision) revision = 1U;
+    apply_temperature(value, revision);
+    send_temperature();
+}
+static void receive_temperature(const RangePacket *packet) {
+    if (link_master && packet->type == RANGE_CONFIG_REQUEST) {
+        if (!peer_request_ack || newer(packet->sequence, peer_request_ack)) {
+            peer_request_ack = packet->sequence;
+            master_temperature(packet->temperature_c_x10);
+        } else {
+            /* Duplicate requests acknowledge the latest master state; they do
+               not roll back a newer local or remote edit. */
+            send_temperature();
+        }
+    } else if (link_master && packet->type == RANGE_CONFIG_ACK) {
+        if (packet->sequence == temperature.revision &&
+            packet->temperature_c_x10 == temperature.temperature_c_x10) {
+            bool was_synchronized = temperature.synchronized;
+            temperature.synchronized = true;
+            local_request_pending = false;
+            if (!was_synchronized) {
+                char line[64];
+                snprintf(line, sizeof(line), "TEMP SYNCED rev=%" PRIu32 "\r\n", temperature.revision);
+                SyncLog_Write(line);
+            }
+        }
+    } else if (!link_master && packet->type == RANGE_CONFIG_STATE) {
+        if (config_known && packet->sequence != temperature.revision &&
+            !newer(packet->sequence, temperature.revision)) return;
+        if (!config_known || packet->sequence != temperature.revision) {
+            /* Import only on a new configuration. Repeated same-revision
+               heartbeats must not roll back a subsequent acoustic result. */
+            have_accepted_delay = packet->flags == 1U;
+            accepted_delay_ns = have_accepted_delay ? packet->delay_ns : 0;
+            status.sequence = have_accepted_delay ? packet->a_sequence : 0;
+            status.quality_permille = have_accepted_delay ? packet->quality_permille : 0;
+            status.delay_ns = accepted_delay_ns;
+            status.source_a = accepted_delay_ns > 0;
+            if (!have_accepted_delay) {
+                status.valid = false;
+                status.distance_mm = 0;
+            }
+            apply_temperature(packet->temperature_c_x10, packet->sequence);
+        } else if (packet->temperature_c_x10 != temperature.temperature_c_x10) {
+            return;
+        }
+        temperature.synchronized = true;
+        if (local_request_pending && (packet->request_ack == pending_request_id ||
+            newer(packet->request_ack, pending_request_id))) local_request_pending = false;
+        RangePacket ack = {0}; ack.type = RANGE_CONFIG_ACK;
+        ack.sequence = temperature.revision; ack.temperature_c_x10 = temperature.temperature_c_x10;
+        send_packet(&ack);
+    }
+}
+static void poll_temperature(uint32_t ms) {
+    bool queued;
+    int16_t value;
+    taskENTER_CRITICAL();
+    queued = request_queued; value = queued_temperature; request_queued = false;
+    taskEXIT_CRITICAL();
+    if (queued) {
+        local_request_pending = true;
+        if (link_master) master_temperature(value);
+        else {
+            requested_temperature = value;
+            pending_request_id = ++next_request_id;
+            if (!pending_request_id) pending_request_id = ++next_request_id;
+            /* Stop any old transfer while waiting for the master's revision. */
+            discard_job = job_state != JOB_IDLE;
+            reset_transaction();
+            request_sent_ms = ms - CONFIG_RETRY_MS;
+        }
+    }
+    if (!link_locked) return;
+    if (link_master) {
+        uint32_t interval = temperature.synchronized ? CONFIG_HEARTBEAT_MS : CONFIG_RETRY_MS;
+        if (ms - config_sent_ms >= interval) send_temperature();
+    } else if (local_request_pending && ms - request_sent_ms >= CONFIG_RETRY_MS) {
+        RangePacket packet = {0}; packet.type = RANGE_CONFIG_REQUEST;
+        packet.sequence = pending_request_id; packet.temperature_c_x10 = requested_temperature;
+        send_packet(&packet); request_sent_ms = ms;
+    }
 }
 static void acknowledge(uint32_t sequence) {
     RangePacket ack = {0}; ack.type = RANGE_ACK;
@@ -120,7 +310,15 @@ static void accept_meta(const RangePacket *p) {
 }
 void Ranging_Receive(const uint8_t bytes[RANGE_WIRE_SIZE]) {
     RangePacket p;
-    if (!initialized || !link_locked || discard_job || !Range_Decode(&p, bytes) || p.session != remote_session) return;
+    if (!initialized || !link_locked || !Range_Decode(&p, bytes) || p.session != remote_session) return;
+    /* Configuration must continue to converge even while an old DSP job is
+       being discarded, and does not depend on the audio/PTP epoch. */
+    if (p.type >= RANGE_CONFIG_REQUEST && p.type <= RANGE_CONFIG_ACK) {
+        receive_temperature(&p); publish(); return;
+    }
+    if (discard_job || !temperature.synchronized || local_request_pending) return;
+    if ((p.type == RANGE_META || p.type == RANGE_RESULT) &&
+        p.config_revision != temperature.revision) return;
     uint64_t now; uint32_t generation;
     if (!TimeSync_CaptureClockFromISR(&now, &generation) || generation != active_generation) return;
     if (p.type == RANGE_REJECT) {
@@ -151,6 +349,8 @@ void Ranging_Receive(const uint8_t bytes[RANGE_WIRE_SIZE]) {
             if (stage == DATA_RX || stage == DSP) acknowledge(p.sequence);
             if (stage == DATA_RX && transferred == RANGE_SAMPLES) {
                 stage = DSP; status.state = RANGING_COMPUTING;
+                job_config = config;
+                job_config_revision = temperature.revision;
                 taskENTER_CRITICAL(); job_state = JOB_RUNNING; taskEXIT_CRITICAL();
                 xTaskNotifyGive(worker);
             }
@@ -181,6 +381,7 @@ static void display_result(void) {
     status.sequence = result_packet.sequence; status.distance_mm = result_packet.distance_mm;
     status.quality_permille = result_packet.quality_permille; status.delay_ns = result_packet.delay_ns;
     status.last_error = RANGE_OK; status.accepted++;
+    have_accepted_delay = true; accepted_delay_ns = status.delay_ns;
     char line[240];
 #if APP_LOG_VERBOSE
     char delta[SYNC_I64_TEXT_SIZE];
@@ -214,9 +415,11 @@ void Ranging_Poll(void) {
     uint64_t now; uint32_t generation;
     bool clock_ok = TimeSync_CaptureClockFromISR(&now, &generation);
     uint32_t ms = xTaskGetTickCount();
+    poll_temperature(ms);
     if (job_state == JOB_DONE) {
         taskENTER_CRITICAL(); job_state = JOB_IDLE; taskEXIT_CRITICAL();
-        if (discard_job || !link_locked || !clock_ok || generation != active_generation || stage != DSP) {
+        if (discard_job || !link_locked || !clock_ok || generation != active_generation || stage != DSP ||
+            !temperature.synchronized || local_request_pending || job_config_revision != temperature.revision) {
             discard_job = false; reset_transaction();
         } else if (!job_success) {
             reject("quality_or_range", job_result.error, &job_result);
@@ -227,14 +430,20 @@ void Ranging_Poll(void) {
             result_packet.quality_permille = job_result.quality_permille;
             result_packet.a_sequence = local_capture.sequence; result_packet.b_sequence = remote_capture.sequence;
             result_packet.generation = remote_capture.generation; result_packet.apply_ns = now + DISPLAY_LEAD_NS;
+            result_packet.config_revision = job_config_revision;
             stage = RESULT_TX; status.state = RANGING_WAIT_DISPLAY; sent_ms = ms - RETRY_MS;
         }
     }
     if (!clock_ok || !link_locked) { publish(); return; }
     if (generation != active_generation) {
         discard_job = job_state != JOB_IDLE; reset_transaction(); status.valid = false;
+        have_accepted_delay = false;
         active_generation = generation;
     }
+    if (!temperature.synchronized || local_request_pending) {
+        status.state = RANGING_WAIT_SYNC; publish(); return;
+    }
+    if (stage == IDLE) status.state = RANGING_WAIT_SOUND;
     if (discard_job || job_state != JOB_IDLE) { publish(); return; }
 
     /* Only copy into buffers while the worker and network no longer own them. */
@@ -259,6 +468,7 @@ void Ranging_Poll(void) {
             RangePacket p = {0}; p.type = RANGE_META; p.sequence = local_capture.sequence;
             p.onset_ns = local_capture.onset_ns; p.start_ns = local_capture.start_ns;
             p.period_ps = local_capture.period_ps; p.generation = local_capture.generation; p.flags = local_capture.flags;
+            p.config_revision = temperature.revision;
             send_packet(&p); sent_ms = ms;
         } else if (stage == DATA_TX) {
             RangePacket p = {0}; p.type = RANGE_DATA; p.sequence = local_capture.sequence;
