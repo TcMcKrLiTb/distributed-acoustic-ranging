@@ -14,6 +14,7 @@ typedef struct {
     uint16_t temperature_raw, humidity_raw;
     uint32_t sampled_ms, attempts, samples, failures, response_us;
     uint8_t last_error; /* LibDriver result; 5 = port/timing error, 6 = not ready. */
+    uint8_t edge_count; /* Complete frames contain 84 edges, including host release. */
     bool initialized, valid, timing_error;
 } DHT11Status;
 

@@ -40,6 +40,7 @@ static void sensor_task(void *argument) {
             dht11_read_temperature_humidity(&sensor, &temperature_raw, &temperature,
                                             &humidity_raw, &humidity);
         bool timing_ok = DHT11_PortFinish(&status.response_us);
+        status.edge_count = DHT11_PortEdges();
         if (!timing_ok) {
             result = 5U;
             if (probing) sensor.inited = 0U;
@@ -65,9 +66,9 @@ static void sensor_task(void *argument) {
         char line[224];
         if (status.valid) {
             /* Integer output also works with newlib-nano without printf-float. */
-            snprintf(line, sizeof(line), "DHT11 temp_x10=%d humidity=%u%% response_us=%" PRIu32
+            snprintf(line, sizeof(line), "DHT11 temp_x10=%d humidity=%u%% edges=%u response_us=%" PRIu32
                      " samples=%" PRIu32 " failures=%" PRIu32 "\r\n",
-                     status.temperature_c_x10, status.humidity_percent, status.response_us,
+                     status.temperature_c_x10, status.humidity_percent, status.edge_count, status.response_us,
                      status.samples, status.failures);
         } else {
             snprintf(line, sizeof(line), "DHT11 %s error=%u timing=%u response_us=%" PRIu32 " %s\r\n",
@@ -96,6 +97,7 @@ void DHT11_Init(void) {
     DRIVER_DHT11_LINK_DISABLE_IRQ(&sensor, dht11_interface_disable_irq);
     DRIVER_DHT11_LINK_ENABLE_IRQ(&sensor, dht11_interface_enable_irq);
     DRIVER_DHT11_LINK_DEBUG_PRINT(&sensor, dht11_interface_debug_print);
+    DRIVER_DHT11_LINK_READ_FRAME(&sensor, dht11_interface_read_frame);
     worker = xTaskCreateStatic(sensor_task, "DHT11", SENSOR_STACK_WORDS, NULL,
                                tskIDLE_PRIORITY + 1U, worker_stack, &worker_control);
     if (!worker) published.last_error = 5U;

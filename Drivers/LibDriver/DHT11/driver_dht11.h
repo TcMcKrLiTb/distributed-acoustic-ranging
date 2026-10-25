@@ -72,6 +72,7 @@ typedef struct dht11_handle_s
     void (*disable_irq)(void);                              /**< point to a disable_irq function address */
     void (*debug_print)(const char *const fmt, ...);        /**< point to a debug_print function address */
     uint8_t inited;                                         /**< inited flag */
+    uint8_t (*read_frame)(uint8_t data[5]);                 /**< optional complete-frame acquisition; NULL uses GPIO polling */
 } dht11_handle_t;
 
 /**
@@ -140,6 +141,15 @@ typedef struct dht11_info_s
  * @note      none
  */
 #define DRIVER_DHT11_LINK_BUS_WRITE(HANDLE, FUC)   (HANDLE)->bus_write = FUC
+
+/**
+ * @brief     link optional complete-frame acquisition function
+ * @param[in] HANDLE pointer to a dht11 handle structure
+ * @param[in] FUC function returning five wire bytes, or NULL for GPIO polling
+ * @note      acquisition includes the start pulse and response; checksum and
+ *            temperature/humidity conversion remain in this driver
+ */
+#define DRIVER_DHT11_LINK_READ_FRAME(HANDLE, FUC)  (HANDLE)->read_frame = FUC
 
 /**
  * @brief     link delay_ms function
