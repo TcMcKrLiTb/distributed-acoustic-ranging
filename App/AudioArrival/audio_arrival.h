@@ -11,6 +11,7 @@ typedef struct {
     uint32_t sequence, clock_generation;
     uint64_t time_ns, sample, interval_ns;
     uint32_t peak, noise, threshold;
+    uint32_t confirmation_samples; /* Confirmation latency; time_ns stays at the first onset. */
     bool synchronized, clipped, interval_valid;
 } AudioArrivalEvent;
 

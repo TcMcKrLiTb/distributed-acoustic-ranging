@@ -266,10 +266,11 @@ void Ranging_Poll(void) {
 #else
         SyncLog_Write("RANGE INIT range_mm=200..2000\r\n");
 #endif
-        char windows[112];
-        snprintf(windows, sizeof(windows), "RANGE DSP primary=LONG compare=FRONT long=%u:%u front=%u:%u\r\n",
+        char windows[128];
+        snprintf(windows, sizeof(windows), "RANGE DSP primary=LONG compare=FRONT long=%u:%u front=%u:%u lag=-%d:%d\r\n",
                  (unsigned)RANGE_LONG_BEGIN, (unsigned)RANGE_LONG_END,
-                 (unsigned)RANGE_FRONT_BEGIN, (unsigned)RANGE_FRONT_END);
+                 (unsigned)RANGE_FRONT_BEGIN, (unsigned)RANGE_FRONT_END,
+                 RANGE_SEARCH_SAMPLES, RANGE_SEARCH_SAMPLES);
         SyncLog_Write(windows);
         announced = true;
     }

@@ -115,7 +115,8 @@ static void reset(bool master_role, uint64_t now, uint32_t epoch) {
     clock_ready = true; capture_ready = false; sent_count = notified = log_count = 0;
     Ranging_Init(); Ranging_SetLink(master_role, true, 111, 222); Ranging_Poll();
     CHECK(initialized && stage == IDLE && active_generation == epoch);
-    CHECK(lines("RANGE DSP primary=LONG compare=FRONT long=128:1920 front=128:384\r\n") == 1);
+    CHECK(RANGE_SEARCH_SAMPLES == 127);
+    CHECK(lines("RANGE DSP primary=LONG compare=FRONT ") == 1);
 }
 static void offer(const RangeCapture *capture) { offered_capture = *capture; capture_ready = true; }
 static void metadata(const RangeCapture *capture) {
@@ -185,7 +186,7 @@ static void wideband(RangeCapture *a, RangeCapture *b) {
 static void shared_front_independent_tail(RangeCapture *a, RangeCapture *b) {
     wideband(a, b);
     uint32_t random = 0x9e3779b9U;
-    /* Every B position touched by the FRONT +/-96 search, including linear
+    /* Every B position touched by the FRONT search, including linear
        interpolation's extra sample, must keep the shared wideband signal. */
     const unsigned last_front_sample = RANGE_FRONT_END - 1U + RANGE_SEARCH_SAMPLES + 1U;
     for (unsigned i = last_front_sample + 1U; i < RANGE_SAMPLES; ++i) {

@@ -11,7 +11,7 @@
 BOOT acoustic ranging; UART 1152000
 RANGE INIT range_mm=200..2000
 SYNC role=MASTER(A) state=ACQUIRING
-AUDIO INIT fs=48000 ch=0 gain=80 warmup=1s
+AUDIO INIT fs=48000 ch=0 gain=80 warmup=1s confirm=96..480
 AUDIO READY
 SYNC role=MASTER(A) state=LOCKED_ESTIMATE
 AUDIO EVENT seq=1 arrival=12.345678901 interval=NA peak=800 noise=5 threshold=128 sync=LOCKED
@@ -27,12 +27,19 @@ RANGE RESULT id=1 distance_mm=400 source=A quality=985
   保留 9 位小数；首次或时钟不连续时 `interval=NA`。
 - 事件保留序号、到达时间、间隔、滤波峰值 `peak`、触发时的噪声估计 `noise`、
   触发门限 `threshold` 和同步状态。削顶时追加 `clipped=1`。
+- 原有最少 96 点确认和双阈值/形态门限不变。形态合格但峰值不足 `2 * threshold` 的连续弱候选，
+  可保留最早交点并最多确认 480 点；延长期间连续 48 点低于 `threshold / 2` 时作废。
+  强音通常仍为 96 点，不增加事件行长度。发生延长确认时，精简事件行才追加 `confirm=N`：
+  单位是采样点，标称 48 kHz 下 96/480 点约为 2/10 ms。
+  `arrival` 始终来自保留的最早交点；`confirm` 不是附加在到达时间上的传播延迟。
+  例如 `AUDIO EVENT ... peak=300 noise=4 threshold=128 sync=LOCKED confirm=240`。
+  `peak` 仍是确认期间的峰值；延长确认时统计跨度会改变，不能把新旧事件行的峰值直接当作固定窗口幅度对照。
 - `RANGE RESULT` 保留结果编号、毫米距离、声源方向和相关质量；`quality` 为千分比，
   例如 985 表示约 98.5%。两板分别保存日志，默认行内不重复打印板号。
 - `RANGE REJECT`、`AUDIO ERROR`、`AUDIO RECOVER` 保留。
   完成互相关搜索后被拒绝的测量，会附带相关质量（千分比）与最佳整数延迟点数，例如：
   `RANGE REJECT reason=quality_or_range error=3 quality=612 lag=-9`。
-  `lag` 是重采样到 A 的采样间隔后、抛物线插值前的最佳候选位置，搜索范围为 -96..96；
+  `lag` 是重采样到 A 的采样间隔后、抛物线插值前的最佳候选位置，本轮搜索范围为 -127..127（旧快照为 -96..96）；
   它不是最终的两板传播时差，还需结合两片段的 PTP 起始时间。
   未完成搜索的拒绝或超时不输出这两个字段，以免误用上次计算值。
 - 每秒检查一次采集健康计数，仅在丢块、时间检查失败、硬件错误、时钟捕获跳过的计数变化，
@@ -42,7 +49,7 @@ RANGE RESULT id=1 distance_mm=400 source=A quality=985
 
 ## 当前测距调试版
 
-启动额外输出 `RANGE DSP primary=LONG compare=FRONT long=128:1920 front=128:384`，
+启动额外输出 `RANGE DSP primary=LONG compare=FRONT long=128:1920 front=128:384 lag=-127:127`，
 区间右端不包含。每对进入 DSP 的片段会在主板输出两条同数据对照，例如：
 
 ```text
@@ -61,6 +68,8 @@ RANGE CMP a=1 b=1 win=FRONT error=0 q=962 q2=930 gap=32 lag=11 frac=11800 dt_ns=
 正式 `RANGE RESULT`、`RANGE REJECT` 仍由 `LONG` 决定。因此出现 FRONT 的 `error=0`，
 但两屏没有更新距离、随后仍有 `RANGE REJECT`，是本轮诊断的预期行为。
 PCM 导出和对照日志可穿插出现，采集脚本会完整保留原始日志；提供测试数据时保留两个串口的全部文件。
+本轮两板应烧录同一份新 `build/Debug/DistributedAcousticRanging.elf`，不要混用旧 Release。
+修改前快照为 `3363294`。旧 PCM 回放只能验证固定片段行为，不能通过补零重建缺失的采样并当作新实测。
 
 ## 完整诊断模式
 

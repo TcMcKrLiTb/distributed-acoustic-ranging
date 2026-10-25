@@ -167,7 +167,9 @@ void diagnosticsView::refreshDiagnostics()
         } else {
             for (unsigned i = 0; i < 4; ++i) std::snprintf(values[i], sizeof(values[i]), "NA");
         }
-        std::snprintf(hint, sizeof(hint), "PEAK: TRIGGER CONFIRM WINDOW");
+        if (haveEvent)
+            std::snprintf(hint, sizeof(hint), "CONFIRM %lu SAMPLES", (unsigned long)event.confirmation_samples);
+        else std::snprintf(hint, sizeof(hint), "NO EVENT");
     } else {
         RangingDiagnostics diagnostics = {};
         const bool haveDiagnostics = Ranging_GetDiagnostics(&diagnostics) && diagnostics.valid && sync.locked;

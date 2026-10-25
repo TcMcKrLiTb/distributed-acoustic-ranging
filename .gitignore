@@ -36,6 +36,7 @@ Thumbs.db
 Desktop.ini
 *.swp
 *~
+*/__pycache__/*
 
 /tests/
 /tools/

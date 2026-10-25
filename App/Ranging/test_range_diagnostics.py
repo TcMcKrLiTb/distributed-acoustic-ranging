@@ -1,7 +1,8 @@
 """Host checks for the real ranging core; no board or third-party Python package.
 
-Builds current C plus a fixed pre-change C revision as a compatibility baseline. If the
-recorded 20261023 PCM set is available, also checks all 24 real paired events.
+Builds current C plus the fixed diagnostic snapshot 3363294 as the 96-sample
+baseline. A controlled copy of current C using the snapshot's search width
+checks compatibility separately from the intentional wider-search behavior.
 Artifacts are retained under build/range-validation for inspection.
 """
 from __future__ import annotations
@@ -53,37 +54,50 @@ FORMAL = ("raw_delay_ns", "delay_ns", "distance_mm", "quality_permille",
           "peak_lag_samples", "correlation_valid", "source_a", "error")
 
 
-def build(cc: str, run: Path, baseline_ref: str):
-    include = ROOT / "App/Ranging"
-    legacy = run / "range_core_legacy.c"
-    legacy.write_bytes(subprocess.check_output(
-        ["git", "show", baseline_ref + ":App/Ranging/range_core.c"], cwd=ROOT))
-    probe = run / "layout.c"
+def build_variant(cc: str, run: Path, name: str, source: bytes, header: bytes):
+    folder = run / name
+    folder.mkdir()
+    (folder / "range_core.c").write_bytes(source)
+    (folder / "range_core.h").write_bytes(header)
+    probe = folder / "layout.c"
     probe.write_text('#include "range_core.h"\n#include <stddef.h>\n'
                      'size_t size_capture(void) { return sizeof(RangeCapture); }\n'
                      'size_t size_estimate(void) { return sizeof(RangeEstimate); }\n'
-                     'size_t offset_candidate(void) { return offsetof(RangeEstimate, candidate_raw_delay_ns); }\n')
-    dlls = []
-    for name, source in [("current", include / "range_core.c"), ("legacy", legacy)]:
-        output = run / (name + ".dll")
-        subprocess.run([cc, "-std=c11", "-Wall", "-Wextra", "-Werror", "-O2", "-shared",
-                        "-I", str(include), str(source), str(probe), "-o", str(output), "-lm"], check=True)
-        dll = ct.CDLL(str(output))
-        for func in ("size_capture", "size_estimate", "offset_candidate"):
-            getattr(dll, func).restype = ct.c_size_t
-        assert dll.size_capture() == ct.sizeof(Capture)
-        assert dll.size_estimate() == ct.sizeof(Estimate)
-        assert dll.offset_candidate() == Estimate.candidate_raw_delay_ns.offset
-        dll.Range_Estimate.argtypes = [ct.POINTER(Capture), ct.POINTER(Capture),
-                                       ct.POINTER(Config), ct.POINTER(Estimate)]
-        dll.Range_Estimate.restype = ct.c_bool
-        if name == "current":
-            dll.Range_EstimateWindow.argtypes = [ct.POINTER(Capture), ct.POINTER(Capture),
-                                                 ct.POINTER(Config), ct.c_uint, ct.c_uint,
-                                                 ct.POINTER(Estimate)]
-            dll.Range_EstimateWindow.restype = ct.c_bool
-        dlls.append(dll)
-    return dlls
+                     'size_t offset_candidate(void) { return offsetof(RangeEstimate, candidate_raw_delay_ns); }\n'
+                     'unsigned search_samples(void) { return RANGE_SEARCH_SAMPLES; }\n')
+    output = folder / (name + ".dll")
+    subprocess.run([cc, "-std=c11", "-Wall", "-Wextra", "-Werror", "-O2", "-shared",
+                    str(folder / "range_core.c"), str(probe), "-o", str(output), "-lm"], check=True)
+    dll = ct.CDLL(str(output))
+    for func in ("size_capture", "size_estimate", "offset_candidate"):
+        getattr(dll, func).restype = ct.c_size_t
+    dll.search_samples.restype = ct.c_uint
+    assert dll.size_capture() == ct.sizeof(Capture)
+    assert dll.size_estimate() == ct.sizeof(Estimate)
+    assert dll.offset_candidate() == Estimate.candidate_raw_delay_ns.offset
+    dll.Range_Estimate.argtypes = [ct.POINTER(Capture), ct.POINTER(Capture),
+                                   ct.POINTER(Config), ct.POINTER(Estimate)]
+    dll.Range_Estimate.restype = ct.c_bool
+    dll.Range_EstimateWindow.argtypes = [ct.POINTER(Capture), ct.POINTER(Capture),
+                                         ct.POINTER(Config), ct.c_uint, ct.c_uint,
+                                         ct.POINTER(Estimate)]
+    dll.Range_EstimateWindow.restype = ct.c_bool
+    return dll
+
+
+def build(cc: str, run: Path, baseline_ref: str):
+    include = ROOT / "App/Ranging"
+    current_source = (include / "range_core.c").read_bytes()
+    current_header = (include / "range_core.h").read_bytes()
+    source = subprocess.check_output(["git", "show", baseline_ref + ":App/Ranging/range_core.c"], cwd=ROOT)
+    header = subprocess.check_output(["git", "show", baseline_ref + ":App/Ranging/range_core.h"], cwd=ROOT)
+    current = build_variant(cc, run, "current", current_source, current_header)
+    baseline = build_variant(cc, run, "snapshot", source, header)
+    control_header = re.sub(rb"(#define RANGE_SEARCH_SAMPLES)\s+\d+", rb"\g<1> 96", current_header)
+    controlled = build_variant(cc, run, "current_search96", current_source, control_header)
+    assert current.search_samples() == 127, "current production search must be +/-127 for this regression"
+    assert baseline.search_samples() == controlled.search_samples() == 96
+    return current, baseline, controlled
 
 
 def call(dll, a, b, cfg=None, window=None, poison=False):
@@ -149,11 +163,16 @@ def check_synthetic(current, legacy):
     _, r3 = call(current, a, b, window=(128, 384))
     assert r3.quality_permille != r.quality_permille
 
+    # Former boundary peaks become valid interior peaks in the wider search.
     for lag in (-96, 96):
-        a, b = synthetic(lag)
+        a, b = synthetic(lag, 3_000_000)
         ok, r = call(current, a, b)
         old_ok, old = call(legacy, a, b)
-        assert (ok, formal(r)) == (old_ok, formal(old))
+        assert ok and r.error == 0 and r.peak_lag_samples == lag
+        assert not old_ok and old.error == 4 and not old.candidate_valid
+    for lag in (-127, 127):
+        a, b = synthetic(lag)
+        ok, r = call(current, a, b)
         assert not ok and r.error == 4 and r.peak_lag_samples == lag
         assert r.correlation_valid and not r.candidate_valid
         assert r.raw_delay_ns == r.distance_mm == 0
@@ -165,7 +184,7 @@ def check_synthetic(current, legacy):
     b.pcm[:] = tone
     ok, r = call(current, a, b)
     old_ok, old = call(legacy, a, b)
-    assert (ok, formal(r)) == (old_ok, formal(old))
+    assert not old_ok and old.error == 4
     assert not ok and r.error == 4 and r.peak_margin_permille < 20
     assert r.raw_delay_ns == r.distance_mm == 0
 
@@ -226,7 +245,7 @@ def load_capture(path):
                    (ct.c_int16*N)(*struct.unpack("<2048h", raw)))
 
 
-def check_recordings(current, legacy, folder):
+def check_recordings(current, legacy, controlled, folder):
     if not folder.is_dir():
         print("SKIP: real PCM fixture missing:", folder)
         return
@@ -242,7 +261,9 @@ def check_recordings(current, legacy, folder):
         b = min(bb, key=lambda c:abs(c.onset_ns-a.onset_ns))
         assert abs(a.onset_ns-b.onset_ns) < 20_000_000 and b.sequence not in used_b
         used_b.add(b.sequence)
-        ok, r = call(current, a, b)
+        # Equal-width replay is the compatibility check. Wide-search results
+        # are intentionally allowed to change and are archived by the corpus test.
+        ok, r = call(controlled, a, b)
         old_ok, old = call(legacy, a, b)
         assert (ok, formal(r)) == (old_ok, formal(old))
         assert (r.quality_permille, r.peak_lag_samples) == logged[index]
@@ -253,7 +274,7 @@ def check_recordings(current, legacy, folder):
         assert 698 <= rf.distance_mm <= 703 and 949 <= rf.quality_permille <= 965
         assert rf.candidate_valid and rf.candidate_distance_mm == rf.distance_mm
         front.append(rf.distance_mm)
-    print("PASS: all 24 captured LONG results exactly match pre-change C and firmware q/lag")
+    print("PASS: controlled +/-96 LONG matches snapshot C and all 24 firmware q/lag values")
     print(f"PASS: all 24 FRONT accepted; {min(front)}..{max(front)} mm, "
           f"mean={statistics.mean(front):.2f}, sample_sd={statistics.stdev(front):.3f} mm")
 
@@ -261,18 +282,18 @@ def check_recordings(current, legacy, folder):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--cc", default="gcc")
-    parser.add_argument("--baseline-ref", default="f43c707",
-                        help="fixed pre-diagnostic source revision (default: f43c707)")
+    parser.add_argument("--baseline-ref", default="3363294",
+                        help="fixed diagnostic snapshot with its own source/header (default: 3363294)")
     parser.add_argument("--recordings", type=Path,
                         default=ROOT/"build/pcm-capture/20261023_214834_384")
     args = parser.parse_args()
     parent = ROOT/"build/range-validation"
     parent.mkdir(parents=True, exist_ok=True)
     run = Path(tempfile.mkdtemp(prefix="run-", dir=parent))
-    current, legacy = build(args.cc, run, args.baseline_ref)
+    current, legacy, controlled = build(args.cc, run, args.baseline_ref)
     check_synthetic(current, legacy)
     check_invalid(current)
-    check_recordings(current, legacy, args.recordings)
+    check_recordings(current, legacy, controlled, args.recordings)
     print("All range diagnostic checks passed. Baseline:", args.baseline_ref, "Artifacts:", run)
 
 

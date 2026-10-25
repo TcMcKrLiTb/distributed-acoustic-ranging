@@ -6,7 +6,9 @@
 /* A fixed format on both boards. 42.7 ms, including 5.3 ms before onset. */
 #define RANGE_SAMPLES 2048U
 #define RANGE_PRE_SAMPLES 256U
-#define RANGE_SEARCH_SAMPLES 96
+/* Maximum symmetric search supported by the fixed LONG/FRONT windows at the
+   nominal rate. Each B interpolation still needs its following sample. */
+#define RANGE_SEARCH_SAMPLES 127
 #define RANGE_LONG_BEGIN 128U
 #define RANGE_LONG_END (RANGE_SAMPLES - 128U)
 #define RANGE_FRONT_BEGIN 128U

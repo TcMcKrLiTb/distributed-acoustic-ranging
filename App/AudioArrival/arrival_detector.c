@@ -5,7 +5,6 @@
 #define WARMUP_SAMPLES 48000U
 #define REFRACTORY_SAMPLES 28800U
 #define QUIET_SAMPLES 4800U
-#define CONFIRM_SAMPLES 96U
 #define MIN_THRESHOLD 128U
 
 void ArrivalDetector_Reset(ArrivalDetector *d) {
@@ -46,21 +45,33 @@ bool ArrivalDetector_Push(ArrivalDetector *d, int16_t pcm,
 
         if (sign != d->previous_sign) d->crossings++;
         d->previous_sign = sign;
-        if (d->candidate_age >= CONFIRM_SAMPLES) {
+        if (magnitude < d->threshold / 2U) d->candidate_quiet++;
+        else d->candidate_quiet = 0;
+        if (d->candidate_age >= ARRIVAL_CONFIRM_MIN_SAMPLES) {
             if (d->hits >= 8U && d->crossings >= 2U &&
                 d->peak >= d->threshold * 2U) {
+                /* Preserve the original 96-sample acceptance, even for a
+                   strong transient followed by silence within that window. */
                 d->onset.peak = d->peak;
+                d->onset.confirmation_samples = d->candidate_age;
                 *event = d->onset;
                 detected = true;
                 d->blocked = true;
                 d->refractory = REFRACTORY_SAMPLES;
                 d->quiet = 0;
+                d->candidate = false;
+            } else if (d->hits < 8U || d->crossings < 2U ||
+                       d->candidate_quiet >= ARRIVAL_CANDIDATE_QUIET_SAMPLES ||
+                       d->candidate_age >= ARRIVAL_CONFIRM_MAX_SAMPLES) {
+                d->candidate = false;
             }
-            d->candidate = false;
+            /* A credible, continuous weak candidate retains its original
+               crossing and frozen threshold for at most 10 ms. */
         }
     } else if (magnitude >= threshold && d->previous_abs < threshold) {
         d->candidate = true;
         d->candidate_age = 0;
+        d->candidate_quiet = 0;
         d->hits = 1;
         d->crossings = 0;
         d->peak = magnitude;
