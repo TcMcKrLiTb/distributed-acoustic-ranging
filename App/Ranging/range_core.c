@@ -102,6 +102,7 @@ void Range_Encode(uint8_t p[RANGE_WIRE_SIZE], const RangePacket *m) {
     if (m->type == RANGE_META) {
         put64(p + 16, m->onset_ns); put64(p + 24, m->start_ns); put64(p + 32, m->period_ps);
         put32(p + 40, m->generation); put32(p + 44, m->flags); put32(p + 48, RANGE_SAMPLES);
+        put32(p + 52, m->config_revision);
     } else if (m->type == RANGE_DATA) {
         put16(p + 16, m->offset); put16(p + 18, m->count);
         for (unsigned i = 0; i < RANGE_CHUNK_SAMPLES; ++i) put16(p + 20 + 2U * i, (uint16_t)m->pcm[i]);
@@ -112,15 +113,26 @@ void Range_Encode(uint8_t p[RANGE_WIRE_SIZE], const RangePacket *m) {
         put32(p + 28, m->quality_permille); put64(p + 32, m->apply_ns);
         put32(p + 40, m->a_sequence); put32(p + 44, m->b_sequence);
         put32(p + 48, m->generation); /* Receiver B's local epoch, not A's. */
+        put32(p + 52, m->config_revision);
+    } else if (m->type >= RANGE_CONFIG_REQUEST && m->type <= RANGE_CONFIG_ACK) {
+        put16(p + 16, (uint16_t)m->temperature_c_x10);
+        if (m->type == RANGE_CONFIG_STATE) {
+            put32(p + 20, m->request_ack);
+            put32(p + 24, m->flags);
+            put64(p + 28, (uint64_t)m->delay_ns);
+            put32(p + 36, m->a_sequence);
+            put32(p + 40, m->quality_permille);
+        }
     }
 }
 bool Range_Decode(RangePacket *m, const uint8_t p[RANGE_WIRE_SIZE]) {
-    if (!m || !Range_IsPacket(p) || p[4] != 1 || p[5] < RANGE_META || p[5] > RANGE_REJECT || p[6] || p[7]) return false;
+    if (!m || !Range_IsPacket(p) || p[4] != 1 || p[5] < RANGE_META || p[5] > RANGE_CONFIG_ACK || p[6] || p[7]) return false;
     memset(m, 0, sizeof(*m));
     m->type = p[5]; m->session = get32(p + 8); m->sequence = get32(p + 12);
     if (m->type == RANGE_META) {
         m->onset_ns = get64(p + 16); m->start_ns = get64(p + 24); m->period_ps = get64(p + 32);
         m->generation = get32(p + 40); m->flags = get32(p + 44);
+        m->config_revision = get32(p + 52);
         if (get32(p + 48) != RANGE_SAMPLES || m->flags != RANGE_CAPTURE_LOCKED ||
             m->start_ns > m->onset_ns || m->onset_ns > INT64_MAX ||
             m->onset_ns - m->start_ns > 10000000ULL ||
@@ -141,10 +153,30 @@ bool Range_Decode(RangePacket *m, const uint8_t p[RANGE_WIRE_SIZE]) {
         m->delay_ns = raw <= INT64_MAX ? (int64_t)raw : -1 - (int64_t)(UINT64_MAX - raw);
         m->distance_mm = get32(p + 24); m->quality_permille = get32(p + 28); m->apply_ns = get64(p + 32);
         m->a_sequence = get32(p + 40); m->b_sequence = get32(p + 44); m->generation = get32(p + 48);
+        m->config_revision = get32(p + 52);
         if (m->distance_mm < RANGE_MIN_MM - RANGE_EDGE_GUARD_MM ||
             m->distance_mm > RANGE_MAX_MM + RANGE_EDGE_GUARD_MM || m->quality_permille < 650U ||
             m->quality_permille > 1000U || m->delay_ns == 0 || m->delay_ns < -RANGE_PAIR_NS ||
             m->delay_ns > RANGE_PAIR_NS || m->apply_ns > INT64_MAX) return false;
+    } else if (m->type >= RANGE_CONFIG_REQUEST && m->type <= RANGE_CONFIG_ACK) {
+        uint16_t raw = get16(p + 16);
+        m->temperature_c_x10 = raw <= INT16_MAX ? (int16_t)raw :
+            (int16_t)(-1 - (int32_t)(UINT16_MAX - raw));
+        m->config_revision = m->type == RANGE_CONFIG_REQUEST ? 0 : m->sequence;
+        m->request_ack = m->type == RANGE_CONFIG_STATE ? get32(p + 20) : 0;
+        if (!m->sequence || m->temperature_c_x10 < -200 || m->temperature_c_x10 > 500) return false;
+        if (m->type == RANGE_CONFIG_STATE) {
+            m->flags = get32(p + 24);
+            uint64_t delay = get64(p + 28);
+            m->delay_ns = delay <= INT64_MAX ? (int64_t)delay : -1 - (int64_t)(UINT64_MAX - delay);
+            m->a_sequence = get32(p + 36);
+            m->quality_permille = get32(p + 40);
+            if (m->flags > 1U) return false;
+            if (m->flags && (!m->a_sequence || m->quality_permille < 650U ||
+                m->quality_permille > 1000U || !m->delay_ns ||
+                m->delay_ns < -RANGE_PAIR_NS || m->delay_ns > RANGE_PAIR_NS)) return false;
+            if (!m->flags && (m->delay_ns || m->a_sequence || m->quality_permille)) return false;
+        }
     }
     return true;
 }

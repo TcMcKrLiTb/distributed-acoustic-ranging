@@ -49,7 +49,8 @@ bool Range_Estimate(const RangeCapture *a, const RangeCapture *b,
 bool Range_Convert(int64_t raw_ns, const RangeConfig *config, RangeEstimate *result);
 
 typedef enum {
-    RANGE_META = 1, RANGE_DATA, RANGE_ACK, RANGE_RESULT, RANGE_RESULT_ACK, RANGE_REJECT
+    RANGE_META = 1, RANGE_DATA, RANGE_ACK, RANGE_RESULT, RANGE_RESULT_ACK, RANGE_REJECT,
+    RANGE_CONFIG_REQUEST, RANGE_CONFIG_STATE, RANGE_CONFIG_ACK
 } RangePacketType;
 typedef struct {
     uint8_t type;
@@ -59,6 +60,12 @@ typedef struct {
     uint32_t generation, flags, distance_mm, quality_permille, a_sequence, b_sequence;
     uint16_t offset, count;
     int16_t pcm[RANGE_CHUNK_SAMPLES];
+    /* META/RESULT carry revision at bytes 52..55. Configuration messages use
+       header sequence as request ID or master revision and signed C*10 at 16.
+       STATE: request ACK at 20, cached-result flag at 24, corrected delay at 28,
+       result ID at 36 and quality at 40. Cache imports never count as events. */
+    int16_t temperature_c_x10;
+    uint32_t config_revision, request_ack;
 } RangePacket;
 
 bool Range_IsPacket(const uint8_t data[RANGE_WIRE_SIZE]);

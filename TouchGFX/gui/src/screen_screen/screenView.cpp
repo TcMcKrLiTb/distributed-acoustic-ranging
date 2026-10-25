@@ -3,6 +3,8 @@
 #include <cstdio>
 #ifndef SIMULATOR
 #include "Ranging/ranging.h"
+#else
+#include <gui/settings_screen/settingsView.hpp>
 #endif
 
 namespace
@@ -63,12 +65,40 @@ void screenView::handleTickEvent()
     std::snprintf(text, sizeof(text), "Q %lu.%lu%%  OK %lu  REJECT %lu", (unsigned long)(s.quality_permille / 10U),
                   (unsigned long)(s.quality_permille % 10U), (unsigned long)s.accepted, (unsigned long)s.rejected);
     setText(statisticsText, statisticsTextBuffer, text);
+
+    RangingTemperatureStatus temperature = {};
+    if (Ranging_GetTemperature(&temperature)) {
+        const int value = temperature.temperature_c_x10;
+        const int magnitude = value < 0 ? -value : value;
+        std::snprintf(text, sizeof(text), "T %s%d.%d C", value < 0 ? "-" : "", magnitude / 10, magnitude % 10);
+        setText(temperatureText, temperatureTextBuffer, text);
+        std::snprintf(text, sizeof(text), "c %lu.%03lu m/s", (unsigned long)(temperature.sound_speed_mm_s / 1000U),
+                      (unsigned long)(temperature.sound_speed_mm_s % 1000U));
+        setText(soundSpeedText, soundSpeedTextBuffer, text);
+        const char* state = temperature.pending ? "TEMP CONFIG SYNCING" :
+                            !s.locked ? "TEMP CONFIG WAIT SYNC" :
+                            !temperature.synchronized ? "TEMP CONFIG NOT SYNCED" : "MANUAL TEMP APPLIED";
+        setText(measurementStatusText, measurementStatusTextBuffer, state);
+    } else {
+        setText(temperatureText, temperatureTextBuffer, "TEMP NA");
+        setText(soundSpeedText, soundSpeedTextBuffer, "c NA");
+        setText(measurementStatusText, measurementStatusTextBuffer, "TEMP CONFIG NA");
+    }
 #else
     setText(boardStatusText, boardStatusTextBuffer, "BOARD A  SYNC LOCKED");
     setText(distanceText, distanceTextBuffer, "1.234 M");
     setText(directionText, directionTextBuffer, "SOURCE A SIDE");
     setText(rangeStateText, rangeStateTextBuffer, "WAIT SOUND  ID 1");
     setText(statisticsText, statisticsTextBuffer, "Q 99.0%  OK 1  REJECT 0");
+    const int temperature = settingsView::demoTemperature();
+    const int magnitude = temperature < 0 ? -temperature : temperature;
+    const uint32_t speed = settingsView::demoSoundSpeed();
+    char text[64];
+    std::snprintf(text, sizeof(text), "T %s%d.%d C", temperature < 0 ? "-" : "", magnitude / 10, magnitude % 10);
+    setText(temperatureText, temperatureTextBuffer, text);
+    std::snprintf(text, sizeof(text), "c %lu.%03lu m/s", (unsigned long)(speed / 1000U), (unsigned long)(speed % 1000U));
+    setText(soundSpeedText, soundSpeedTextBuffer, text);
+    setText(measurementStatusText, measurementStatusTextBuffer, "DEMO MANUAL TEMPERATURE");
 #endif
 }
 

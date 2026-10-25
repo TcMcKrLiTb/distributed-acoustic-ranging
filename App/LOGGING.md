@@ -15,6 +15,20 @@ RANGE RESULT id=1 distance_mm=400 source=A quality=985
 
 数字及启动日志的先后顺序仅为示例。
 
+手动温度设置仅在配置改变、完成同步或重算旧结果时输出少量 `TEMP` 日志，
+配置心跳和重复确认不周期刷屏：
+
+```text
+TEMP APPLY rev=2 temp_x10=300 c_mm_s=349228
+TEMP SYNCED rev=2
+```
+
+`temp_x10` 为摄氏温度乘 10，`c_mm_s` 为修正声速（毫米/秒），`rev` 为主板分配的配置版本。
+`TEMP RECALC` 表示使用上次有效时差重新换算，并非检测到新的音频事件；
+不增加 `RANGE RESULT` 编号或成功计数。`dt_ns` 是已经扣除输入链路偏置的时差，
+可直接按本次声速计算理论距离。`valid=0` 表示重算结果超出原有量程。
+设置与验收步骤见 [温度补偿说明](Ranging/TEMPERATURE.md)。
+
 - `SYNC` 只在板子角色或同步状态改变时输出，包括失锁、断链和重新锁定。
 - `AUDIO READY` 在背景学习完成后输出一次，正常的 HOLDOFF/ARMED 循环不打印。
   如果采样不连续、时钟跳变或重启 DMA 导致重新学习，完成后会再次提示。
