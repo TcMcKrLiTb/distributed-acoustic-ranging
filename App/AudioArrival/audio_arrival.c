@@ -4,6 +4,7 @@
 #include "arrival_time.h"
 #include "arrival_clock.h"
 #include "Ranging/range_recorder.h"
+#include "Diagnostics/pcm_dump.h"
 #include "TimeSync/time_sync.h"
 #include "TimeSync/Port/sync_log.h"
 #include "stm32746g_discovery_audio.h"
@@ -69,6 +70,7 @@ static void finish_capture(void) {
     taskEXIT_CRITICAL();
     if (slot < 0) { recorder.pending = false; return; }
     bool copied = RangeRecorder_Copy(&recorder, &captures[slot]);
+    if (copied) PcmDump_Submit(&captures[slot]);
     taskENTER_CRITICAL();
     capture_states[slot] = copied ? CAP_READY : CAP_FREE;
     taskEXIT_CRITICAL();

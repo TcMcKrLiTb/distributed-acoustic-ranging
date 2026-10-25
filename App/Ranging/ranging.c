@@ -8,6 +8,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include <inttypes.h>
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -19,13 +20,15 @@ typedef enum { JOB_IDLE, JOB_RUNNING, JOB_DONE } JobState;
 
 static RangeCapture local_capture, remote_capture;
 static RangePacket result_packet;
-static RangeEstimate job_result;
+static RangeEstimate job_result, job_front_result;
+static uint32_t job_dsp_ms;
 static bool job_success, discard_job;
 static volatile JobState job_state;
 static TaskHandle_t worker;
 static StaticTask_t worker_control;
 static StackType_t worker_stack[1536];
 static RangingStatus status, published;
+static RangingDiagnostics diagnostics, published_diagnostics;
 static bool initialized, context_valid, local_valid, remote_valid, result_acked;
 static bool announced;
 static bool link_master, link_locked;
@@ -36,10 +39,18 @@ static Stage stage;
 static const RangeConfig config = {RANGE_SOUND_SPEED_MM_S, RANGE_RELATIVE_BIAS_NS};
 
 static void publish(void) {
-    taskENTER_CRITICAL(); published = status; taskEXIT_CRITICAL();
+    taskENTER_CRITICAL();
+    published = status; published_diagnostics = diagnostics;
+    taskEXIT_CRITICAL();
 }
 static void run_job(void) {
+    TickType_t began = xTaskGetTickCount();
+    /* Both calculations read the same immutable pair. Only LONG is submitted
+       to the existing result state machine and Ethernet protocol. */
     job_success = Range_Estimate(&local_capture, &remote_capture, &config, &job_result);
+    Range_EstimateWindow(&local_capture, &remote_capture, &config,
+                         RANGE_FRONT_BEGIN, RANGE_FRONT_END, &job_front_result);
+    job_dsp_ms = (uint32_t)(xTaskGetTickCount() - began) * portTICK_PERIOD_MS;
     taskENTER_CRITICAL(); job_state = JOB_DONE; taskEXIT_CRITICAL();
 }
 static void work(void *argument) {
@@ -61,6 +72,50 @@ bool Ranging_GetStatus(RangingStatus *out) {
     taskENTER_CRITICAL(); *out = published; taskEXIT_CRITICAL();
     return initialized;
 }
+bool Ranging_GetDiagnostics(RangingDiagnostics *out) {
+    if (!out) return false;
+    taskENTER_CRITICAL(); *out = published_diagnostics; taskEXIT_CRITICAL();
+    return initialized && out->valid;
+}
+static void clear_diagnostics(void) {
+    memset(&diagnostics, 0, sizeof(diagnostics));
+}
+static void log_comparison(const char *window, const RangeEstimate *r, bool final) {
+    char q[12] = "NA", q2[12] = "NA", gap[12] = "NA", lag[12] = "NA", frac[12] = "NA";
+    char delay[SYNC_I64_TEXT_SIZE] = "NA", mm[12] = "NA", elapsed[32] = "";
+    if (r->correlation_valid) {
+        snprintf(q, sizeof(q), "%" PRIu32, r->quality_permille);
+        snprintf(lag, sizeof(lag), "%" PRId32, r->peak_lag_samples);
+        if (r->competitor_valid) {
+            snprintf(q2, sizeof(q2), "%" PRIu32, r->competitor_quality_permille);
+            snprintf(gap, sizeof(gap), "%" PRId32, r->peak_margin_permille);
+        }
+    }
+    if (r->candidate_valid) {
+        snprintf(frac, sizeof(frac), "%" PRId32,
+                 (int32_t)lroundf(r->peak_fraction_samples * 65536.0f));
+        SyncFormat_I64(delay, r->candidate_raw_delay_ns);
+        snprintf(mm, sizeof(mm), "%" PRIu32, r->candidate_distance_mm);
+    }
+    if (final) snprintf(elapsed, sizeof(elapsed), " dsp_ms=%" PRIu32, job_dsp_ms);
+    char line[256];
+    snprintf(line, sizeof(line), "RANGE CMP a=%" PRIu32 " b=%" PRIu32
+             " win=%s error=%u q=%s q2=%s gap=%s lag=%s frac=%s dt_ns=%s mm=%s%s\r\n",
+             local_capture.sequence, remote_capture.sequence, window, (unsigned)r->error,
+             q, q2, gap, lag, frac, delay, mm, elapsed);
+    SyncLog_Write(line);
+}
+static void complete_diagnostics(void) {
+    diagnostics.valid = true;
+    diagnostics.a_sequence = local_capture.sequence;
+    diagnostics.b_sequence = remote_capture.sequence;
+    diagnostics.completed_ms = (uint32_t)xTaskGetTickCount() * portTICK_PERIOD_MS;
+    diagnostics.dsp_ms = job_dsp_ms;
+    diagnostics.long_window = job_result;
+    diagnostics.front_window = job_front_result;
+    log_comparison("LONG", &job_result, false);
+    log_comparison("FRONT", &job_front_result, true);
+}
 static void reset_transaction(void) {
     stage = IDLE; local_valid = false; remote_valid = false; transferred = 0;
     result_acked = false;
@@ -75,6 +130,7 @@ void Ranging_SetLink(bool master, bool locked, uint32_t session, uint32_t peer_s
     if (changed) {
         discard_job = job_state != JOB_IDLE;
         reset_transaction(); status.valid = false;
+        clear_diagnostics();
         active_generation = UINT32_MAX;
     }
     if (!locked) status.state = RANGING_WAIT_SYNC;
@@ -136,6 +192,7 @@ void Ranging_Receive(const uint8_t bytes[RANGE_WIRE_SIZE]) {
             if ((p.onset_ns > now ? p.onset_ns - now : now - p.onset_ns) > 1000000000ULL) return;
             if (remote_valid && remote_capture.sequence != p.sequence && stage == DATA_RX) return;
             if (!remote_valid) {
+                clear_diagnostics();
                 accept_meta(&p); transferred = 0;
                 if (!local_valid) started_ms = xTaskGetTickCount();
                 status.state = RANGING_TRANSFER;
@@ -209,6 +266,11 @@ void Ranging_Poll(void) {
 #else
         SyncLog_Write("RANGE INIT range_mm=200..2000\r\n");
 #endif
+        char windows[112];
+        snprintf(windows, sizeof(windows), "RANGE DSP primary=LONG compare=FRONT long=%u:%u front=%u:%u\r\n",
+                 (unsigned)RANGE_LONG_BEGIN, (unsigned)RANGE_LONG_END,
+                 (unsigned)RANGE_FRONT_BEGIN, (unsigned)RANGE_FRONT_END);
+        SyncLog_Write(windows);
         announced = true;
     }
     uint64_t now; uint32_t generation;
@@ -218,21 +280,25 @@ void Ranging_Poll(void) {
         taskENTER_CRITICAL(); job_state = JOB_IDLE; taskEXIT_CRITICAL();
         if (discard_job || !link_locked || !clock_ok || generation != active_generation || stage != DSP) {
             discard_job = false; reset_transaction();
-        } else if (!job_success) {
-            reject("quality_or_range", job_result.error, &job_result);
         } else {
-            memset(&result_packet, 0, sizeof(result_packet));
-            result_packet.type = RANGE_RESULT; result_packet.sequence = ++next_result_id;
-            result_packet.delay_ns = job_result.delay_ns; result_packet.distance_mm = job_result.distance_mm;
-            result_packet.quality_permille = job_result.quality_permille;
-            result_packet.a_sequence = local_capture.sequence; result_packet.b_sequence = remote_capture.sequence;
-            result_packet.generation = remote_capture.generation; result_packet.apply_ns = now + DISPLAY_LEAD_NS;
-            stage = RESULT_TX; status.state = RANGING_WAIT_DISPLAY; sent_ms = ms - RETRY_MS;
+            complete_diagnostics();
+            if (!job_success) {
+                reject("quality_or_range", job_result.error, &job_result);
+            } else {
+                memset(&result_packet, 0, sizeof(result_packet));
+                result_packet.type = RANGE_RESULT; result_packet.sequence = ++next_result_id;
+                result_packet.delay_ns = job_result.delay_ns; result_packet.distance_mm = job_result.distance_mm;
+                result_packet.quality_permille = job_result.quality_permille;
+                result_packet.a_sequence = local_capture.sequence; result_packet.b_sequence = remote_capture.sequence;
+                result_packet.generation = remote_capture.generation; result_packet.apply_ns = now + DISPLAY_LEAD_NS;
+                stage = RESULT_TX; status.state = RANGING_WAIT_DISPLAY; sent_ms = ms - RETRY_MS;
+            }
         }
     }
     if (!clock_ok || !link_locked) { publish(); return; }
     if (generation != active_generation) {
         discard_job = job_state != JOB_IDLE; reset_transaction(); status.valid = false;
+        clear_diagnostics();
         active_generation = generation;
     }
     if (discard_job || job_state != JOB_IDLE) { publish(); return; }
@@ -244,6 +310,7 @@ void Ranging_Poll(void) {
                 local_capture.flags == RANGE_CAPTURE_LOCKED && now >= local_capture.onset_ns &&
                 now - local_capture.onset_ns < 500000000ULL) {
                 last_sequence = local_capture.sequence; local_valid = true;
+                clear_diagnostics();
                 if (!remote_valid) started_ms = ms;
                 status.state = RANGING_TRANSFER;
                 if (!link_master) { stage = META_TX; transferred = 0; sent_ms = ms - RETRY_MS; }

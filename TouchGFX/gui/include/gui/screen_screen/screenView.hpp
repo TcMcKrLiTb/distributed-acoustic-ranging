@@ -14,6 +14,9 @@ public:
     virtual void handleTickEvent();
 
     void button1Clicked() override;
+private:
+    void refreshDiagnostics();
+    unsigned refreshTicks;
 };
 
 #endif // SCREENVIEW_HPP

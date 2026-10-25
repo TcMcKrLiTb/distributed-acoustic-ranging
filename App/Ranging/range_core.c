@@ -20,9 +20,20 @@ bool Range_Convert(int64_t raw, const RangeConfig *c, RangeEstimate *r) {
 
 bool Range_Estimate(const RangeCapture *a, const RangeCapture *b,
                     const RangeConfig *config, RangeEstimate *r) {
-    if (!a || !b || !config || !r) return false;
+    return Range_EstimateWindow(a, b, config, RANGE_LONG_BEGIN, RANGE_LONG_END, r);
+}
+
+bool Range_EstimateWindow(const RangeCapture *a, const RangeCapture *b,
+                         const RangeConfig *config, unsigned begin, unsigned end,
+                         RangeEstimate *r) {
+    if (!r) return false;
     memset(r, 0, sizeof(*r));
     r->error = RANGE_BAD_CAPTURE;
+    if (!a || !b || !config || begin >= end || end > RANGE_SAMPLES ||
+        begin < RANGE_SEARCH_SAMPLES || end - begin < 3U ||
+        config->sound_speed_mm_s < 300000U || config->sound_speed_mm_s > 380000U ||
+        abs64((int64_t)config->bias_ns) > 10000000LL) return false;
+    r->window_begin = (uint16_t)begin; r->window_end = (uint16_t)end;
     if (a->flags != RANGE_CAPTURE_LOCKED || b->flags != RANGE_CAPTURE_LOCKED ||
         a->period_ps < 20000000ULL || a->period_ps > 22000000ULL ||
         b->period_ps < 20000000ULL || b->period_ps > 22000000ULL ||
@@ -34,8 +45,12 @@ bool Range_Estimate(const RangeCapture *a, const RangeCapture *b,
     /* Resample B on A's sample spacing. start times stay in the final equation;
        PTP synchronization does not synchronize the SAI sampling edges. */
     float ratio = (float)a->period_ps / (float)b->period_ps;
+    /* Check the entire interpolation domain before converting positions to
+       unsigned indices, including unusual but otherwise valid clock ratios. */
+    float first_position = ((float)begin - RANGE_SEARCH_SAMPLES) * ratio;
+    float last_position = ((float)(end - 1U) + RANGE_SEARCH_SAMPLES) * ratio;
+    if (first_position < 0.0f || last_position >= (float)(RANGE_SAMPLES - 1U)) return false;
     float scores[2 * RANGE_SEARCH_SAMPLES + 1];
-    const unsigned begin = 128U, end = RANGE_SAMPLES - 128U;
     const float n = (float)(end - begin);
     float sum_a = 0.0f, sq_a = 0.0f;
     for (unsigned i = begin; i < end; ++i) {
@@ -68,8 +83,45 @@ bool Range_Estimate(const RangeCapture *a, const RangeCapture *b,
     r->quality_permille = best > 0.0f ? (uint32_t)(fminf(best, 1.0f) * 1000.0f + 0.5f) : 0;
     r->peak_lag_samples = peak;
     r->correlation_valid = true;
+    float competitor = -2.0f;
+    for (int k = -RANGE_SEARCH_SAMPLES; k <= RANGE_SEARCH_SAMPLES; ++k) {
+        if (abs64(k - peak) > 12 && scores[k + RANGE_SEARCH_SAMPLES] > competitor) {
+            competitor = scores[k + RANGE_SEARCH_SAMPLES];
+            r->competitor_lag_samples = k;
+        }
+    }
+    r->competitor_valid = competitor > -2.0f;
+    r->competitor_quality_permille = competitor > 0.0f ?
+        (uint32_t)(fminf(competitor, 1.0f) * 1000.0f + 0.5f) : 0;
+    r->peak_margin_permille = (int32_t)lroundf((best - competitor) * 1000.0f);
+
+    bool interior = peak != -RANGE_SEARCH_SAMPLES && peak != RANGE_SEARCH_SAMPLES;
+    bool fraction_valid = false;
+    float fraction = 0.0f;
+    if (interior) {
+        float left = scores[peak + RANGE_SEARCH_SAMPLES - 1];
+        float right = scores[peak + RANGE_SEARCH_SAMPLES + 1];
+        float curvature = left - 2.0f * best + right;
+        fraction = curvature < -1.0e-6f ? 0.5f * (left - right) / curvature : 0.0f;
+        fraction_valid = fraction >= -0.5f && fraction <= 0.5f;
+        if (fraction_valid) {
+            r->peak_fraction_samples = fraction;
+            int64_t correction = (int64_t)llround((double)((float)peak + fraction) *
+                                                 (double)a->period_ps / 1000.0);
+            int64_t delay = (int64_t)b->start_ns - (int64_t)a->start_ns + correction;
+            RangeEstimate candidate = {0};
+            /* A low-quality peak can have a diagnostic distance while remaining
+               rejected. Range_Convert's physical range test still applies below. */
+            Range_Convert(delay, config, &candidate);
+            if (delay >= -RANGE_PAIR_NS && delay <= RANGE_PAIR_NS) {
+                r->candidate_valid = true;
+                r->candidate_raw_delay_ns = delay;
+                r->candidate_distance_mm = candidate.distance_mm;
+            }
+        }
+    }
     if (best < 0.65f) { r->error = RANGE_LOW_CORRELATION; return false; }
-    if (peak == -RANGE_SEARCH_SAMPLES || peak == RANGE_SEARCH_SAMPLES) {
+    if (!interior) {
         r->error = RANGE_AMBIGUOUS; return false;
     }
     for (int k = -RANGE_SEARCH_SAMPLES; k <= RANGE_SEARCH_SAMPLES; ++k) {
@@ -77,11 +129,7 @@ bool Range_Estimate(const RangeCapture *a, const RangeCapture *b,
             r->error = RANGE_AMBIGUOUS; return false;
         }
     }
-    float left = scores[peak + RANGE_SEARCH_SAMPLES - 1];
-    float right = scores[peak + RANGE_SEARCH_SAMPLES + 1];
-    float curvature = left - 2.0f * best + right;
-    float fraction = curvature < -1.0e-6f ? 0.5f * (left - right) / curvature : 0.0f;
-    if (fraction < -0.5f || fraction > 0.5f) { r->error = RANGE_AMBIGUOUS; return false; }
+    if (!fraction_valid) { r->error = RANGE_AMBIGUOUS; return false; }
     int64_t correction = (int64_t)llround((double)((float)peak + fraction) * (double)a->period_ps / 1000.0);
     int64_t delay = (int64_t)b->start_ns - (int64_t)a->start_ns + correction;
     return Range_Convert(delay, config, r);
