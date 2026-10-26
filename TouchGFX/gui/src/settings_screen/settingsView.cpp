@@ -249,7 +249,10 @@ void settingsView::temperatureClicked(const touchgfx::AbstractButtonContainer& s
         } else if (canChange) editor.rejected = true;
     } else if (&source == &temperatureMinusButton || &source == &temperaturePlusButton) {
         if (snapshot.automatic || sourceAwaiting) return;
-        const int next = editor.draft + (&source == &temperaturePlusButton ? 5 : -5);
+        // Snap toward the pressed direction; normalize the remainder below zero.
+        const int remainder = (editor.draft % 5 + 5) % 5;
+        const int next = editor.draft + (&source == &temperaturePlusButton ?
+            5 - remainder : -(remainder ? remainder : 5));
         if (next >= minimumTemperature && next <= maximumTemperature) {
             editor.draft = static_cast<int16_t>(next);
             editor.initialized = true;
