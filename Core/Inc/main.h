@@ -65,6 +65,8 @@ void Error_Handler(void);
 #define LED1_GPIO_Port GPIOI
 #define LCD_DISP_Pin GPIO_PIN_12
 #define LCD_DISP_GPIO_Port GPIOI
+#define DHT11_SIG_Pin GPIO_PIN_6
+#define DHT11_SIG_GPIO_Port GPIOG
 
 /* USER CODE BEGIN Private defines */
 

@@ -77,7 +77,9 @@ void screenView::handleTickEvent()
         setText(soundSpeedText, soundSpeedTextBuffer, text);
         const char* state = temperature.pending ? "TEMP CONFIG SYNCING" :
                             !s.locked ? "TEMP CONFIG WAIT SYNC" :
-                            !temperature.synchronized ? "TEMP CONFIG NOT SYNCED" : "MANUAL TEMP APPLIED";
+                            !temperature.synchronized ? "TEMP CONFIG NOT SYNCED" :
+                            temperature.automatic ? (temperature.source_a ? "AUTO A TEMP APPLIED" : "AUTO B TEMP APPLIED") :
+                            "MANUAL TEMP APPLIED";
         setText(measurementStatusText, measurementStatusTextBuffer, state);
     } else {
         setText(temperatureText, temperatureTextBuffer, "TEMP NA");

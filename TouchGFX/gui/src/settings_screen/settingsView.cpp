@@ -30,6 +30,7 @@ struct TemperatureSnapshot
     int16_t temperature;
     uint32_t speed, revision;
     bool available, locked, synchronized, pending;
+    bool automatic, sensorAvailable, sourceA;
     char board;
 };
 
@@ -42,6 +43,8 @@ struct TemperatureEditor
     bool initialized, dirty, awaiting, rejected;
 };
 TemperatureEditor editor = {defaultTemperature, defaultTemperature, 0, false, false, false, false};
+bool sourceAwaiting = false, requestedAutomatic = false;
+bool observedAutomatic = false;
 
 uint32_t previewSpeed(int16_t temperature)
 {
@@ -73,6 +76,9 @@ TemperatureSnapshot temperatureSnapshot()
         snapshot.revision = temperature.revision;
         snapshot.synchronized = temperature.synchronized;
         snapshot.pending = temperature.pending;
+        snapshot.automatic = temperature.automatic;
+        snapshot.sensorAvailable = temperature.sensor_available;
+        snapshot.sourceA = temperature.source_a;
     }
     TimeSyncStatus sync = {};
     if (TimeSync_GetStatus(&sync)) {
@@ -86,6 +92,21 @@ TemperatureSnapshot temperatureSnapshot()
 void followSnapshot(const TemperatureSnapshot& snapshot)
 {
     if (!snapshot.available) return;
+    if (sourceAwaiting && !snapshot.pending) {
+        const bool selected = snapshot.automatic == requestedAutomatic &&
+            (!requestedAutomatic || snapshot.sourceA == (snapshot.board == 'A'));
+        if (selected && snapshot.synchronized) sourceAwaiting = false;
+        else {
+            sourceAwaiting = false;
+            editor.rejected = true;
+        }
+    }
+    if (snapshot.automatic || observedAutomatic != snapshot.automatic) {
+        editor.draft = snapshot.temperature;
+        editor.initialized = true;
+        editor.dirty = editor.awaiting = editor.rejected = false;
+    }
+    observedAutomatic = snapshot.automatic;
     if (!editor.initialized) {
         editor.draft = snapshot.temperature;
         editor.initialized = true;
@@ -122,17 +143,45 @@ void setText(touchgfx::TextAreaWithOneWildcard& widget,
     buffer[N - 1] = 0;
     widget.invalidate();
 }
+
+template <typename Button>
+void styleSourceButton(Button& button, bool selected, bool enabled)
+{
+    button.setTouchable(enabled);
+    button.setBoxWithBorderColors(
+        selected ? touchgfx::Color::getColorFromRGB(22, 77, 122) :
+        enabled ? touchgfx::Color::getColorFromRGB(255, 255, 255) : touchgfx::Color::getColorFromRGB(211, 220, 231),
+        touchgfx::Color::getColorFromRGB(0, 153, 204),
+        touchgfx::Color::getColorFromRGB(211, 220, 231),
+        touchgfx::Color::getColorFromRGB(51, 102, 153));
+    button.setTextColors(
+        selected ? touchgfx::Color::getColorFromRGB(255, 255, 255) :
+        enabled ? touchgfx::Color::getColorFromRGB(10, 10, 10) : touchgfx::Color::getColorFromRGB(138, 128, 128),
+        touchgfx::Color::getColorFromRGB(10, 10, 10));
+    button.invalidate();
+}
 }
 
-settingsView::settingsView() : refreshTicks(0), applyEnabled(true),
+settingsView::settingsView() : refreshTicks(0), applyEnabled(true), sourceButtonState(0xFFFFFFFFU),
     temperatureCallback(this, &settingsView::temperatureClicked)
 {
     temperatureMinusButton.setAction(temperatureCallback);
     temperaturePlusButton.setAction(temperatureCallback);
     applySettingsButton.setAction(temperatureCallback);
-    // Manual input is the implemented source; the board has no ambient sensor.
+    tempAutoButton.setAction(temperatureCallback);
+    tempManualButton.setAction(temperatureCallback);
     tempAutoButton.setTouchable(false);
     tempManualButton.setTouchable(false);
+    // Replace the Designer's static "no sensor" hint in the derived view, so
+    // regenerating the layout never overwrites the live availability message.
+    tempSourceHintText.setVisible(false);
+    sourceHintText.setPosition(tempSourceHintText.getX(), tempSourceHintText.getY(),
+                               tempSourceHintText.getWidth(), tempSourceHintText.getHeight());
+    sourceHintText.setTypedText(configSyncText.getTypedText());
+    sourceHintText.setColor(touchgfx::Color::getColorFromRGB(78, 96, 117));
+    sourceHintBuffer[0] = 0;
+    sourceHintText.setWildcard(sourceHintBuffer);
+    add(sourceHintText);
     enableApply(false);
 }
 
@@ -181,15 +230,36 @@ void settingsView::temperatureClicked(const touchgfx::AbstractButtonContainer& s
 {
     const TemperatureSnapshot snapshot = temperatureSnapshot();
     followSnapshot(snapshot);
-    if (&source == &temperatureMinusButton || &source == &temperaturePlusButton) {
-        const int next = editor.draft + (&source == &temperaturePlusButton ? 5 : -5);
+    if (&source == &tempAutoButton || &source == &tempManualButton) {
+        const bool automatic = &source == &tempAutoButton;
+        const bool canChange = snapshot.available && snapshot.locked && snapshot.synchronized &&
+                               !snapshot.pending && !sourceAwaiting &&
+                               (!automatic || snapshot.sensorAvailable);
+        bool accepted = false;
+#ifndef SIMULATOR
+        if (canChange) accepted = Ranging_SetTemperatureSource(automatic);
+#else
+        (void)canChange; // No physical sensor is advertised by the simulator.
+#endif
+        if (accepted) {
+            sourceAwaiting = true;
+            requestedAutomatic = automatic;
+            editor.draft = snapshot.temperature;
+            editor.dirty = editor.awaiting = editor.rejected = false;
+        } else if (canChange) editor.rejected = true;
+    } else if (&source == &temperatureMinusButton || &source == &temperaturePlusButton) {
+        if (snapshot.automatic || sourceAwaiting) return;
+        // Snap toward the pressed direction; normalize the remainder below zero.
+        const int remainder = (editor.draft % 5 + 5) % 5;
+        const int next = editor.draft + (&source == &temperaturePlusButton ?
+            5 - remainder : -(remainder ? remainder : 5));
         if (next >= minimumTemperature && next <= maximumTemperature) {
             editor.draft = static_cast<int16_t>(next);
             editor.initialized = true;
             editor.dirty = !snapshot.available || editor.awaiting || editor.draft != snapshot.temperature;
             editor.rejected = false;
         }
-    } else if (&source == &applySettingsButton && editor.dirty && !editor.awaiting &&
+    } else if (&source == &applySettingsButton && !snapshot.automatic && !sourceAwaiting && editor.dirty && !editor.awaiting &&
                snapshot.available && snapshot.locked && snapshot.synchronized && !snapshot.pending) {
         bool accepted;
 #ifdef SIMULATOR
@@ -229,7 +299,27 @@ void settingsView::refreshTemperature()
     std::snprintf(text, sizeof(text), "BOARD %c; %s", snapshot.board, snapshot.locked ? "SYNC LOCKED" : "WAIT SYNC");
 #endif
     setText(settingsSyncText, settingsSyncTextBuffer, text);
-    const bool syncing = snapshot.pending || editor.awaiting;
+    const bool syncing = snapshot.pending || editor.awaiting || sourceAwaiting;
+    const bool autoSelected = sourceAwaiting ? requestedAutomatic : snapshot.automatic;
+    const bool canSelect = snapshot.available && snapshot.locked && snapshot.synchronized && !syncing;
+    const bool manualEnabled = canSelect && snapshot.automatic;
+    const bool autoEnabled = canSelect && snapshot.sensorAvailable &&
+        (!snapshot.automatic || snapshot.sourceA != (snapshot.board == 'A'));
+    const bool stepsEnabled = !autoSelected && !sourceAwaiting && !snapshot.automatic;
+    const unsigned buttons = (autoSelected ? 1U : 0U) | (manualEnabled ? 2U : 0U) |
+        (autoEnabled ? 4U : 0U) | (stepsEnabled ? 8U : 0U);
+    if (buttons != sourceButtonState) {
+        sourceButtonState = buttons;
+        styleSourceButton(tempManualButton, !autoSelected, manualEnabled);
+        styleSourceButton(tempAutoButton, autoSelected, autoEnabled);
+        styleSourceButton(temperatureMinusButton, false, stepsEnabled);
+        styleSourceButton(temperaturePlusButton, false, stepsEnabled);
+    }
+    if (sourceAwaiting) std::snprintf(text, sizeof(text), "SOURCE SYNCING");
+    else if (snapshot.automatic) std::snprintf(text, sizeof(text), "AUTO FROM %c; 1 HZ", snapshot.sourceA ? 'A' : 'B');
+    else if (snapshot.sensorAvailable) std::snprintf(text, sizeof(text), "SENSOR READY");
+    else std::snprintf(text, sizeof(text), "NO SENSOR; PROBE 5S");
+    setText(sourceHintText, sourceHintBuffer, text);
     if (!snapshot.available) std::snprintf(text, sizeof(text), "CONFIG NA; NOT APPLIED");
     else if (syncing) std::snprintf(text, sizeof(text), "SYNCING; DRAFT %s C", draft);
     else if (!snapshot.locked) std::snprintf(text, sizeof(text), editor.dirty ? "NOT APPLIED; WAIT SYNC" : "WAIT SYNC");
@@ -238,9 +328,11 @@ void settingsView::refreshTemperature()
     else if (editor.dirty) {
         temperatureText(active, sizeof(active), snapshot.temperature);
         std::snprintf(text, sizeof(text), "NOT APPLIED; ACTIVE %s C", active);
-    } else std::snprintf(text, sizeof(text), "APPLIED R%lu", (unsigned long)snapshot.revision);
+    } else if (snapshot.automatic) std::snprintf(text, sizeof(text), "AUTO %c; APPLIED R%lu",
+                  snapshot.sourceA ? 'A' : 'B', (unsigned long)snapshot.revision);
+    else std::snprintf(text, sizeof(text), "APPLIED R%lu", (unsigned long)snapshot.revision);
     setText(configSyncText, configSyncTextBuffer, text);
-    enableApply(snapshot.available && snapshot.locked && snapshot.synchronized && !syncing && editor.dirty);
+    enableApply(!snapshot.automatic && !sourceAwaiting && snapshot.available && snapshot.locked && snapshot.synchronized && !syncing && editor.dirty);
 }
 
 #ifdef SIMULATOR

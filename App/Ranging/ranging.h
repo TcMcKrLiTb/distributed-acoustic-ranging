@@ -23,6 +23,7 @@ typedef struct {
     int16_t temperature_c_x10;
     uint32_t sound_speed_mm_s, revision;
     bool synchronized, pending;
+    bool automatic, sensor_available, source_a;
 } RangingTemperatureStatus;
 
 void Ranging_Init(void);
@@ -31,6 +32,9 @@ bool Ranging_GetTemperature(RangingTemperatureStatus *temperature);
 /* Thread-safe mailbox, never transmits from the GUI task. Both boards may set
    a temperature once linked and synchronized. Values are kept in RAM. */
 bool Ranging_SetTemperature(int16_t temperature_c_x10);
+/* Auto uses the sensor on the board that accepts this request. Source changes
+   and automatic samples are coordinated by A and synchronized to both boards. */
+bool Ranging_SetTemperatureSource(bool automatic);
 /* The following functions belong exclusively to SyncTask, including ETH TX. */
 void Ranging_SetLink(bool master, bool locked, uint32_t session, uint32_t peer_session);
 void Ranging_Receive(const uint8_t payload[RANGE_WIRE_SIZE]);

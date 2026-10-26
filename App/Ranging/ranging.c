@@ -1,6 +1,8 @@
 #include "ranging.h"
 #include "range_config.h"
 #include "range_temperature.h"
+#include "DHT11/dht11.h"
+#include "main.h"
 #include "AudioArrival/audio_arrival.h"
 #include "TimeSync/time_sync.h"
 #include "TimeSync/sync_app.h"
@@ -17,6 +19,10 @@
 #define DISPLAY_LEAD_NS 250000000ULL
 #define CONFIG_RETRY_MS 100U
 #define CONFIG_HEARTBEAT_MS 500U
+#define SENSOR_FRESH_MS 7000U
+#define SENSOR_REFRESH_MS 1000U
+#define SENSOR_LEASE_MS 4000U
+enum { TEMPERATURE_MANUAL, TEMPERATURE_AUTO_A, TEMPERATURE_AUTO_B };
 typedef enum { IDLE, META_TX, DATA_TX, DATA_RX, DSP, RESULT_TX, DISPLAY_WAIT, RESULT_WAIT } Stage;
 typedef enum { JOB_IDLE, JOB_RUNNING, JOB_DONE } JobState;
 
@@ -40,13 +46,18 @@ static RangeConfig config = {RANGE_SOUND_SPEED_MM_S, RANGE_RELATIVE_BIAS_NS};
 static RangeConfig job_config;
 static uint32_t job_config_revision;
 static RangingTemperatureStatus temperature = {
-    RANGE_TEMPERATURE_DEFAULT_X10, RANGE_SOUND_SPEED_MM_S, 1U, false, false
+    .temperature_c_x10 = RANGE_TEMPERATURE_DEFAULT_X10,
+    .sound_speed_mm_s = RANGE_SOUND_SPEED_MM_S, .revision = 1U
 }, published_temperature;
 /* GUI writes only this mailbox. Everything else is owned by SyncTask. */
 static bool request_queued, local_request_pending, config_known;
 static int16_t queued_temperature, requested_temperature;
+static uint8_t queued_source, requested_source, temperature_source;
+static uint32_t source_epoch = 1U, requested_epoch;
 static uint32_t next_request_id, pending_request_id, peer_request_ack;
 static uint32_t config_sent_ms, request_sent_ms;
+static uint32_t sensor_sent_ms, sensor_refresh_ms, peer_sensor_ms, peer_sensor_sequence;
+static bool owner_failed;
 static bool have_accepted_delay;
 static int64_t accepted_delay_ns;
 
@@ -93,9 +104,33 @@ bool Ranging_SetTemperature(int16_t value) {
     if (!Range_TemperatureSoundSpeed(value)) return false;
     taskENTER_CRITICAL();
     bool accepted = initialized && published.locked && published_temperature.synchronized &&
-                    !published_temperature.pending && !request_queued;
+                    !published_temperature.pending && !request_queued &&
+                    !published_temperature.automatic;
     if (accepted) {
         queued_temperature = value;
+        queued_source = TEMPERATURE_MANUAL;
+        request_queued = true;
+        published_temperature.pending = true;
+    }
+    taskEXIT_CRITICAL();
+    return accepted;
+}
+static bool sensor_available(const DHT11Status *sample) {
+    return sample->present && sample->samples &&
+           HAL_GetTick() - sample->sampled_ms <= SENSOR_FRESH_MS &&
+           Range_TemperatureSoundSpeed(sample->temperature_c_x10) != 0U;
+}
+bool Ranging_SetTemperatureSource(bool automatic) {
+    DHT11Status sample;
+    DHT11_GetLatest(&sample);
+    taskENTER_CRITICAL();
+    bool accepted = initialized && published.locked && published_temperature.synchronized &&
+                    !published_temperature.pending && !request_queued &&
+                    (!automatic || sensor_available(&sample));
+    if (accepted) {
+        queued_source = automatic ? (published.master ? TEMPERATURE_AUTO_A : TEMPERATURE_AUTO_B) :
+                                   TEMPERATURE_MANUAL;
+        queued_temperature = automatic ? sample.temperature_c_x10 : published_temperature.temperature_c_x10;
         request_queued = true;
         published_temperature.pending = true;
     }
@@ -123,6 +158,16 @@ void Ranging_SetLink(bool master, bool locked, uint32_t session, uint32_t peer_s
         config_sent_ms = xTaskGetTickCount() - CONFIG_HEARTBEAT_MS;
         request_sent_ms = xTaskGetTickCount() - CONFIG_RETRY_MS;
         if (new_context) {
+            /* Ownership never carries across a peer reboot or a role change. */
+            if (temperature_source != TEMPERATURE_MANUAL) {
+                temperature_source = TEMPERATURE_MANUAL;
+                temperature.automatic = false;
+                temperature.source_a = false;
+                if (!++source_epoch) ++source_epoch;
+                if (!++temperature.revision) ++temperature.revision;
+            }
+            owner_failed = false;
+            peer_sensor_sequence = 0U;
             config_known = master;
             peer_request_ack = 0;
             local_request_pending = false;
@@ -147,6 +192,8 @@ static void send_temperature(void) {
     packet.type = RANGE_CONFIG_STATE;
     packet.sequence = temperature.revision;
     packet.temperature_c_x10 = temperature.temperature_c_x10;
+    packet.temperature_source = temperature_source;
+    packet.source_epoch = source_epoch;
     packet.request_ack = peer_request_ack;
     /* A temperature change also reconciles the cached measurement. The old
        scheduled RESULT may have reached only one display before the edit. */
@@ -167,6 +214,7 @@ static void revalue_distance(void) {
     status.valid = status.distance_mm >= RANGE_MIN_MM - RANGE_EDGE_GUARD_MM &&
                    status.distance_mm <= RANGE_MAX_MM + RANGE_EDGE_GUARD_MM;
     status.last_error = status.valid ? RANGE_OK : RANGE_OUT_OF_RANGE;
+    if (temperature.automatic) return;
     char line[176], delta[SYNC_I64_TEXT_SIZE];
     SyncFormat_I64(delta, accepted_delay_ns);
     snprintf(line, sizeof(line), "TEMP RECALC id=%" PRIu32 " rev=%" PRIu32
@@ -174,7 +222,7 @@ static void revalue_distance(void) {
              temperature.revision, status.distance_mm, status.valid ? 1U : 0U, delta);
     SyncLog_Write(line);
 }
-static void apply_temperature(int16_t value, uint32_t revision) {
+static void apply_temperature(int16_t value, uint32_t revision, uint8_t source, uint32_t epoch) {
     /* A running worker retains its captures and immutable configuration until
        JOB_DONE. No packet from the canceled measurement can publish afterward. */
     discard_job = job_state != JOB_IDLE;
@@ -182,26 +230,50 @@ static void apply_temperature(int16_t value, uint32_t revision) {
     temperature.temperature_c_x10 = value;
     temperature.sound_speed_mm_s = Range_TemperatureSoundSpeed(value);
     temperature.revision = revision;
+    if (source_epoch != epoch || temperature_source != source) {
+        owner_failed = false;
+        peer_sensor_sequence = 0U;
+        peer_sensor_ms = xTaskGetTickCount();
+        sensor_sent_ms = peer_sensor_ms - SENSOR_REFRESH_MS;
+        sensor_refresh_ms = peer_sensor_ms - SENSOR_REFRESH_MS;
+    }
+    source_epoch = epoch;
+    temperature_source = source;
+    temperature.automatic = source != TEMPERATURE_MANUAL;
+    temperature.source_a = source == TEMPERATURE_AUTO_A;
     temperature.synchronized = false;
     config.sound_speed_mm_s = temperature.sound_speed_mm_s;
     config_known = true;
     revalue_distance();
+    if (temperature.automatic) return;
     char line[128];
     snprintf(line, sizeof(line), "TEMP APPLY rev=%" PRIu32 " temp_x10=%d c_mm_s=%" PRIu32 "\r\n",
              revision, (int)value, temperature.sound_speed_mm_s);
     SyncLog_Write(line);
 }
-static void master_temperature(int16_t value) {
+static void master_temperature(int16_t value, uint8_t source) {
+    if (value == temperature.temperature_c_x10 && source == temperature_source) {
+        send_temperature();
+        return;
+    }
+    uint32_t epoch = source_epoch;
+    if (source != temperature_source && !++epoch) ++epoch;
     uint32_t revision = temperature.revision + 1U;
     if (!revision) revision = 1U;
-    apply_temperature(value, revision);
+    apply_temperature(value, revision, source, epoch);
     send_temperature();
 }
 static void receive_temperature(const RangePacket *packet) {
     if (link_master && packet->type == RANGE_CONFIG_REQUEST) {
         if (!peer_request_ack || newer(packet->sequence, peer_request_ack)) {
             peer_request_ack = packet->sequence;
-            master_temperature(packet->temperature_c_x10);
+            /* A user action is based on one ownership epoch. A delayed request
+               from an older owner cannot undo a more recent source change. */
+            if (packet->source_epoch == source_epoch &&
+                (packet->temperature_source == TEMPERATURE_MANUAL ||
+                 (packet->temperature_source == TEMPERATURE_AUTO_B && packet->sensor_present))) {
+                master_temperature(packet->temperature_c_x10, packet->temperature_source);
+            } else send_temperature();
         } else {
             /* Duplicate requests acknowledge the latest master state; they do
                not roll back a newer local or remote edit. */
@@ -209,11 +281,12 @@ static void receive_temperature(const RangePacket *packet) {
         }
     } else if (link_master && packet->type == RANGE_CONFIG_ACK) {
         if (packet->sequence == temperature.revision &&
-            packet->temperature_c_x10 == temperature.temperature_c_x10) {
+            packet->temperature_c_x10 == temperature.temperature_c_x10 &&
+            packet->temperature_source == temperature_source && packet->source_epoch == source_epoch) {
             bool was_synchronized = temperature.synchronized;
             temperature.synchronized = true;
             local_request_pending = false;
-            if (!was_synchronized) {
+            if (!was_synchronized && !temperature.automatic) {
                 char line[64];
                 snprintf(line, sizeof(line), "TEMP SYNCED rev=%" PRIu32 "\r\n", temperature.revision);
                 SyncLog_Write(line);
@@ -235,8 +308,10 @@ static void receive_temperature(const RangePacket *packet) {
                 status.valid = false;
                 status.distance_mm = 0;
             }
-            apply_temperature(packet->temperature_c_x10, packet->sequence);
-        } else if (packet->temperature_c_x10 != temperature.temperature_c_x10) {
+            apply_temperature(packet->temperature_c_x10, packet->sequence,
+                              packet->temperature_source, packet->source_epoch);
+        } else if (packet->temperature_c_x10 != temperature.temperature_c_x10 ||
+                   packet->temperature_source != temperature_source || packet->source_epoch != source_epoch) {
             return;
         }
         temperature.synchronized = true;
@@ -244,20 +319,42 @@ static void receive_temperature(const RangePacket *packet) {
             newer(packet->request_ack, pending_request_id))) local_request_pending = false;
         RangePacket ack = {0}; ack.type = RANGE_CONFIG_ACK;
         ack.sequence = temperature.revision; ack.temperature_c_x10 = temperature.temperature_c_x10;
+        ack.temperature_source = temperature_source; ack.source_epoch = source_epoch;
         send_packet(&ack);
+    } else if (link_master && packet->type == RANGE_SENSOR_UPDATE &&
+               temperature_source == TEMPERATURE_AUTO_B && packet->source_epoch == source_epoch) {
+        if (peer_sensor_sequence && !newer(packet->sequence, peer_sensor_sequence)) return;
+        peer_sensor_sequence = packet->sequence;
+        peer_sensor_ms = xTaskGetTickCount();
+        if (!packet->sensor_present) master_temperature(temperature.temperature_c_x10, TEMPERATURE_MANUAL);
+        else if (packet->temperature_c_x10 != temperature.temperature_c_x10)
+            master_temperature(packet->temperature_c_x10, TEMPERATURE_AUTO_B);
     }
 }
 static void poll_temperature(uint32_t ms) {
     bool queued;
     int16_t value;
+    uint8_t source;
+    DHT11Status sample;
+    DHT11_GetLatest(&sample);
+    bool available = sensor_available(&sample);
+    bool refresh = ms - sensor_refresh_ms >= SENSOR_REFRESH_MS;
+    if (refresh) sensor_refresh_ms = ms;
+    temperature.sensor_available = available;
     taskENTER_CRITICAL();
-    queued = request_queued; value = queued_temperature; request_queued = false;
+    queued = request_queued; value = queued_temperature; source = queued_source; request_queued = false;
     taskEXIT_CRITICAL();
     if (queued) {
+        /* Presence may have changed since the GUI queued the selection. */
+        if (source != TEMPERATURE_MANUAL && !available) queued = false;
+    }
+    if (queued) {
         local_request_pending = true;
-        if (link_master) master_temperature(value);
+        if (link_master) master_temperature(value, source);
         else {
             requested_temperature = value;
+            requested_source = source;
+            requested_epoch = source_epoch;
             pending_request_id = ++next_request_id;
             if (!pending_request_id) pending_request_id = ++next_request_id;
             /* Stop any old transfer while waiting for the master's revision. */
@@ -266,6 +363,17 @@ static void poll_temperature(uint32_t ms) {
             request_sent_ms = ms - CONFIG_RETRY_MS;
         }
     }
+    /* Losing the owner is latched until the shared configuration has returned
+       to manual. A recovery probe only makes a future Auto selection possible. */
+    bool local_owner = temperature_source == (link_master ? TEMPERATURE_AUTO_A : TEMPERATURE_AUTO_B);
+    if (local_owner && !available) owner_failed = true;
+    if (link_master && temperature_source == TEMPERATURE_AUTO_A) {
+        if (owner_failed) master_temperature(temperature.temperature_c_x10, TEMPERATURE_MANUAL);
+        else if (refresh && sample.valid && sample.temperature_c_x10 != temperature.temperature_c_x10)
+            master_temperature(sample.temperature_c_x10, TEMPERATURE_AUTO_A);
+    }
+    if (link_master && temperature_source == TEMPERATURE_AUTO_B && ms - peer_sensor_ms > SENSOR_LEASE_MS)
+        master_temperature(temperature.temperature_c_x10, TEMPERATURE_MANUAL);
     if (!link_locked) return;
     if (link_master) {
         uint32_t interval = temperature.synchronized ? CONFIG_HEARTBEAT_MS : CONFIG_RETRY_MS;
@@ -273,7 +381,17 @@ static void poll_temperature(uint32_t ms) {
     } else if (local_request_pending && ms - request_sent_ms >= CONFIG_RETRY_MS) {
         RangePacket packet = {0}; packet.type = RANGE_CONFIG_REQUEST;
         packet.sequence = pending_request_id; packet.temperature_c_x10 = requested_temperature;
+        packet.temperature_source = requested_source; packet.source_epoch = requested_epoch;
+        packet.sensor_present = requested_source == TEMPERATURE_AUTO_B && available;
         send_packet(&packet); request_sent_ms = ms;
+    }
+    if (!link_master && temperature_source == TEMPERATURE_AUTO_B && config_known &&
+        sample.attempts && ms - sensor_sent_ms >= SENSOR_REFRESH_MS) {
+        RangePacket packet = {0}; packet.type = RANGE_SENSOR_UPDATE;
+        packet.sequence = sample.attempts; packet.temperature_c_x10 = sample.temperature_c_x10;
+        packet.temperature_source = TEMPERATURE_AUTO_B; packet.source_epoch = source_epoch;
+        packet.sensor_present = !owner_failed;
+        send_packet(&packet); sensor_sent_ms = ms;
     }
 }
 static void acknowledge(uint32_t sequence) {
@@ -313,7 +431,7 @@ void Ranging_Receive(const uint8_t bytes[RANGE_WIRE_SIZE]) {
     if (!initialized || !link_locked || !Range_Decode(&p, bytes) || p.session != remote_session) return;
     /* Configuration must continue to converge even while an old DSP job is
        being discarded, and does not depend on the audio/PTP epoch. */
-    if (p.type >= RANGE_CONFIG_REQUEST && p.type <= RANGE_CONFIG_ACK) {
+    if (p.type >= RANGE_CONFIG_REQUEST && p.type <= RANGE_SENSOR_UPDATE) {
         receive_temperature(&p); publish(); return;
     }
     if (discard_job || !temperature.synchronized || local_request_pending) return;
