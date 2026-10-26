@@ -50,7 +50,7 @@ bool Range_Convert(int64_t raw_ns, const RangeConfig *config, RangeEstimate *res
 
 typedef enum {
     RANGE_META = 1, RANGE_DATA, RANGE_ACK, RANGE_RESULT, RANGE_RESULT_ACK, RANGE_REJECT,
-    RANGE_CONFIG_REQUEST, RANGE_CONFIG_STATE, RANGE_CONFIG_ACK
+    RANGE_CONFIG_REQUEST, RANGE_CONFIG_STATE, RANGE_CONFIG_ACK, RANGE_SENSOR_UPDATE
 } RangePacketType;
 typedef struct {
     uint8_t type;
@@ -66,6 +66,11 @@ typedef struct {
        result ID at 36 and quality at 40. Cache imports never count as events. */
     int16_t temperature_c_x10;
     uint32_t config_revision, request_ack;
+    /* Config and SENSOR_UPDATE: source at 18 (manual/A/B = 0/1/2), presence
+       at 19 and ownership epoch at 44. SENSOR_UPDATE sequence is an attempt ID. */
+    uint8_t temperature_source;
+    bool sensor_present;
+    uint32_t source_epoch;
 } RangePacket;
 
 bool Range_IsPacket(const uint8_t data[RANGE_WIRE_SIZE]);

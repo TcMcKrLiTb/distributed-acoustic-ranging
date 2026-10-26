@@ -114,8 +114,10 @@ void Range_Encode(uint8_t p[RANGE_WIRE_SIZE], const RangePacket *m) {
         put32(p + 40, m->a_sequence); put32(p + 44, m->b_sequence);
         put32(p + 48, m->generation); /* Receiver B's local epoch, not A's. */
         put32(p + 52, m->config_revision);
-    } else if (m->type >= RANGE_CONFIG_REQUEST && m->type <= RANGE_CONFIG_ACK) {
+    } else if (m->type >= RANGE_CONFIG_REQUEST && m->type <= RANGE_SENSOR_UPDATE) {
         put16(p + 16, (uint16_t)m->temperature_c_x10);
+        p[18] = m->temperature_source; p[19] = m->sensor_present ? 1U : 0U;
+        put32(p + 44, m->source_epoch);
         if (m->type == RANGE_CONFIG_STATE) {
             put32(p + 20, m->request_ack);
             put32(p + 24, m->flags);
@@ -126,7 +128,7 @@ void Range_Encode(uint8_t p[RANGE_WIRE_SIZE], const RangePacket *m) {
     }
 }
 bool Range_Decode(RangePacket *m, const uint8_t p[RANGE_WIRE_SIZE]) {
-    if (!m || !Range_IsPacket(p) || p[4] != 1 || p[5] < RANGE_META || p[5] > RANGE_CONFIG_ACK || p[6] || p[7]) return false;
+    if (!m || !Range_IsPacket(p) || p[4] != 1 || p[5] < RANGE_META || p[5] > RANGE_SENSOR_UPDATE || p[6] || p[7]) return false;
     memset(m, 0, sizeof(*m));
     m->type = p[5]; m->session = get32(p + 8); m->sequence = get32(p + 12);
     if (m->type == RANGE_META) {
@@ -158,13 +160,17 @@ bool Range_Decode(RangePacket *m, const uint8_t p[RANGE_WIRE_SIZE]) {
             m->distance_mm > RANGE_MAX_MM + RANGE_EDGE_GUARD_MM || m->quality_permille < 650U ||
             m->quality_permille > 1000U || m->delay_ns == 0 || m->delay_ns < -RANGE_PAIR_NS ||
             m->delay_ns > RANGE_PAIR_NS || m->apply_ns > INT64_MAX) return false;
-    } else if (m->type >= RANGE_CONFIG_REQUEST && m->type <= RANGE_CONFIG_ACK) {
+    } else if (m->type >= RANGE_CONFIG_REQUEST && m->type <= RANGE_SENSOR_UPDATE) {
         uint16_t raw = get16(p + 16);
         m->temperature_c_x10 = raw <= INT16_MAX ? (int16_t)raw :
             (int16_t)(-1 - (int32_t)(UINT16_MAX - raw));
-        m->config_revision = m->type == RANGE_CONFIG_REQUEST ? 0 : m->sequence;
+        m->temperature_source = p[18]; m->sensor_present = p[19] != 0U;
+        m->source_epoch = get32(p + 44);
+        m->config_revision = m->type == RANGE_CONFIG_STATE || m->type == RANGE_CONFIG_ACK ? m->sequence : 0;
         m->request_ack = m->type == RANGE_CONFIG_STATE ? get32(p + 20) : 0;
-        if (!m->sequence || m->temperature_c_x10 < -200 || m->temperature_c_x10 > 500) return false;
+        if (!m->sequence || m->temperature_c_x10 < -200 || m->temperature_c_x10 > 500 ||
+            m->temperature_source > 2U || p[19] > 1U || !m->source_epoch ||
+            (m->type == RANGE_SENSOR_UPDATE && m->temperature_source != 2U)) return false;
         if (m->type == RANGE_CONFIG_STATE) {
             m->flags = get32(p + 24);
             uint64_t delay = get64(p + 28);

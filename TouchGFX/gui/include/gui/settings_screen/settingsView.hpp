@@ -21,6 +21,9 @@ public:
 protected:
     unsigned refreshTicks;
     bool applyEnabled;
+    unsigned sourceButtonState;
+    touchgfx::TextAreaWithOneWildcard sourceHintText;
+    touchgfx::Unicode::UnicodeChar sourceHintBuffer[64];
     touchgfx::Callback<settingsView, const touchgfx::AbstractButtonContainer&> temperatureCallback;
     void temperatureClicked(const touchgfx::AbstractButtonContainer& source);
     void refreshTemperature();
