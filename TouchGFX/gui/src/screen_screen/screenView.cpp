@@ -9,6 +9,19 @@
 
 namespace
 {
+void formatDistance(char* text, std::size_t size, uint32_t millimeters, bool valid, DistanceUnit unit)
+{
+    if (!valid) {
+        std::snprintf(text, size, "%s", unit == DistanceUnit::Centimeters ? "---.- CM" : "-.--- M");
+    } else if (unit == DistanceUnit::Centimeters) {
+        std::snprintf(text, size, "%lu.%lu CM", (unsigned long)(millimeters / 10U),
+                      (unsigned long)(millimeters % 10U));
+    } else {
+        std::snprintf(text, size, "%lu.%03lu M", (unsigned long)(millimeters / 1000U),
+                      (unsigned long)(millimeters % 1000U));
+    }
+}
+
 // The Designer owns widget geometry; repaint only when its text changes.
 template <std::size_t N>
 void setText(touchgfx::TextAreaWithOneWildcard& widget,
@@ -50,13 +63,12 @@ void screenView::handleTickEvent()
     char text[64];
     std::snprintf(text, sizeof(text), "BOARD %c  %s", s.master ? 'A' : 'B', s.locked ? "SYNC LOCKED" : "WAIT SYNC");
     setText(boardStatusText, boardStatusTextBuffer, text);
+    formatDistance(text, sizeof(text), s.distance_mm, s.valid, presenter->getDistanceUnit());
+    setText(distanceText, distanceTextBuffer, text);
     if (s.valid) {
-        std::snprintf(text, sizeof(text), "%lu.%03lu M", (unsigned long)(s.distance_mm / 1000U), (unsigned long)(s.distance_mm % 1000U));
-        setText(distanceText, distanceTextBuffer, text);
         std::snprintf(text, sizeof(text), "SOURCE %c SIDE", s.source_a ? 'A' : 'B');
         setText(directionText, directionTextBuffer, text);
     } else {
-        setText(distanceText, distanceTextBuffer, "-.--- M");
         setText(directionText, directionTextBuffer, "SOURCE -");
     }
     const char* states[] = {"WAIT SYNC", "WAIT SOUND", "TRANSFER", "CORRELATING", "WAIT DISPLAY"};
@@ -87,15 +99,16 @@ void screenView::handleTickEvent()
         setText(measurementStatusText, measurementStatusTextBuffer, "TEMP CONFIG NA");
     }
 #else
+    char text[64];
     setText(boardStatusText, boardStatusTextBuffer, "BOARD A  SYNC LOCKED");
-    setText(distanceText, distanceTextBuffer, "1.234 M");
+    formatDistance(text, sizeof(text), 1234U, true, presenter->getDistanceUnit());
+    setText(distanceText, distanceTextBuffer, text);
     setText(directionText, directionTextBuffer, "SOURCE A SIDE");
     setText(rangeStateText, rangeStateTextBuffer, "WAIT SOUND  ID 1");
     setText(statisticsText, statisticsTextBuffer, "Q 99.0%  OK 1  REJECT 0");
     const int temperature = settingsView::demoTemperature();
     const int magnitude = temperature < 0 ? -temperature : temperature;
     const uint32_t speed = settingsView::demoSoundSpeed();
-    char text[64];
     std::snprintf(text, sizeof(text), "T %s%d.%d C", temperature < 0 ? "-" : "", magnitude / 10, magnitude % 10);
     setText(temperatureText, temperatureTextBuffer, text);
     std::snprintf(text, sizeof(text), "c %lu.%03lu m/s", (unsigned long)(speed / 1000U), (unsigned long)(speed % 1000U));

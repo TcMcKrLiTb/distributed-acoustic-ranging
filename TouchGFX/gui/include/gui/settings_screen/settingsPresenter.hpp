@@ -27,6 +27,9 @@ public:
 
     virtual ~settingsPresenter() {}
 
+    DistanceUnit getDistanceUnit() const { return model->getDistanceUnit(); }
+    void setDistanceUnit(DistanceUnit unit) { model->setDistanceUnit(unit); }
+
 private:
     settingsPresenter();
 

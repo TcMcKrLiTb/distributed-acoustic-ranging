@@ -163,8 +163,11 @@ void styleSourceButton(Button& button, bool selected, bool enabled)
 }
 
 settingsView::settingsView() : refreshTicks(0), applyEnabled(true), sourceButtonState(0xFFFFFFFFU),
-    temperatureCallback(this, &settingsView::temperatureClicked)
+    temperatureCallback(this, &settingsView::temperatureClicked),
+    unitCallback(this, &settingsView::unitClicked)
 {
+    unitMeterButton.setAction(unitCallback);
+    unitCmButton.setAction(unitCallback);
     temperatureMinusButton.setAction(temperatureCallback);
     temperaturePlusButton.setAction(temperatureCallback);
     applySettingsButton.setAction(temperatureCallback);
@@ -194,6 +197,7 @@ void settingsView::setupScreen()
     demoText.setVisible(true);
 #endif
     refreshTicks = 0;
+    refreshUnitButtons();
     refreshTemperature();
 }
 
@@ -224,6 +228,21 @@ void settingsView::enableApply(bool enabled)
         enabled ? touchgfx::Color::getColorFromRGB(255, 255, 255) : touchgfx::Color::getColorFromRGB(78, 96, 117),
         touchgfx::Color::getColorFromRGB(10, 10, 10));
     applySettingsButton.invalidate();
+}
+
+void settingsView::unitClicked(const touchgfx::AbstractButtonContainer& source)
+{
+    if (&source == &unitMeterButton) presenter->setDistanceUnit(DistanceUnit::Meters);
+    else if (&source == &unitCmButton) presenter->setDistanceUnit(DistanceUnit::Centimeters);
+    else return;
+    refreshUnitButtons();
+}
+
+void settingsView::refreshUnitButtons()
+{
+    const DistanceUnit unit = presenter->getDistanceUnit();
+    styleSourceButton(unitMeterButton, unit == DistanceUnit::Meters, true);
+    styleSourceButton(unitCmButton, unit == DistanceUnit::Centimeters, true);
 }
 
 void settingsView::temperatureClicked(const touchgfx::AbstractButtonContainer& source)

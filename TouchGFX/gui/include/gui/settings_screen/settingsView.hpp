@@ -25,7 +25,10 @@ protected:
     touchgfx::TextAreaWithOneWildcard sourceHintText;
     touchgfx::Unicode::UnicodeChar sourceHintBuffer[64];
     touchgfx::Callback<settingsView, const touchgfx::AbstractButtonContainer&> temperatureCallback;
+    touchgfx::Callback<settingsView, const touchgfx::AbstractButtonContainer&> unitCallback;
     void temperatureClicked(const touchgfx::AbstractButtonContainer& source);
+    void unitClicked(const touchgfx::AbstractButtonContainer& source);
+    void refreshUnitButtons();
     void refreshTemperature();
     void enableApply(bool enabled);
 };

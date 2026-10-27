@@ -8,7 +8,7 @@ extern "C" {
 }
 #endif
 
-Model::Model() : modelListener(0)
+Model::Model() : modelListener(0), distanceUnit(DistanceUnit::Meters)
 {
 
 }

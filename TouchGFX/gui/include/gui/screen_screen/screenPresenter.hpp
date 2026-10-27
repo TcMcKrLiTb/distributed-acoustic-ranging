@@ -29,6 +29,8 @@ public:
 
     void toggleGpio();
 
+    DistanceUnit getDistanceUnit() const { return model->getDistanceUnit(); }
+
 private:
     screenPresenter();
 
