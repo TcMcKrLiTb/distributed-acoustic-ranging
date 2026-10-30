@@ -150,6 +150,9 @@ try {
             $state.Writer.AutoFlush = $true
             $serial.Open()
         }
+        # Discard bytes retained by the driver from a previous capture. All
+        # ports are open before this boundary; play only after READY below.
+        foreach ($state in $states) { $state.Serial.DiscardInBuffer() }
         Write-Host "READY: $($Ports -join ', ') at $BaudRate baud. Play the test audio now."
         Write-Host "Capturing for $DurationSeconds seconds. Output: $OutputDirectory"
         $timer = [Diagnostics.Stopwatch]::StartNew()
