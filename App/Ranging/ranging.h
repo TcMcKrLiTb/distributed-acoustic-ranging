@@ -26,8 +26,17 @@ typedef struct {
     bool automatic, sensor_available, source_a;
 } RangingTemperatureStatus;
 
+/* A-only DSP snapshot for the latest paired attempt, including rejected peaks.
+   FRONT is diagnostic only; LONG alone drives the normal result protocol. */
+typedef struct {
+    bool valid;
+    uint32_t a_sequence, b_sequence, completed_ms, dsp_ms;
+    RangeEstimate long_window, front_window;
+} RangingDiagnostics;
+
 void Ranging_Init(void);
 bool Ranging_GetStatus(RangingStatus *status);
+bool Ranging_GetDiagnostics(RangingDiagnostics *diagnostics);
 bool Ranging_GetTemperature(RangingTemperatureStatus *temperature);
 /* Thread-safe mailbox, never transmits from the GUI task. Both boards may set
    a temperature once linked and synchronized. Values are kept in RAM. */

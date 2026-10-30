@@ -6,7 +6,13 @@
 /* A fixed format on both boards. 42.7 ms, including 5.3 ms before onset. */
 #define RANGE_SAMPLES 2048U
 #define RANGE_PRE_SAMPLES 256U
-#define RANGE_SEARCH_SAMPLES 96
+/* Maximum symmetric search supported by the fixed LONG/FRONT windows at the
+   nominal rate. Each B interpolation still needs its following sample. */
+#define RANGE_SEARCH_SAMPLES 127
+#define RANGE_LONG_BEGIN 128U
+#define RANGE_LONG_END (RANGE_SAMPLES - 128U)
+#define RANGE_FRONT_BEGIN 128U
+#define RANGE_FRONT_END 384U
 #define RANGE_WIRE_SIZE 56U
 #define RANGE_CHUNK_SAMPLES 16U
 #define RANGE_PAIR_NS 20000000LL
@@ -41,11 +47,23 @@ typedef struct {
     bool correlation_valid;
     bool source_a;
     RangeError error;
+    /* Diagnostic candidates remain separate from an accepted measurement. */
+    uint16_t window_begin, window_end; /* end is exclusive */
+    uint32_t competitor_quality_permille;
+    int32_t competitor_lag_samples, peak_margin_permille;
+    bool competitor_valid;
+    float peak_fraction_samples;
+    bool candidate_valid;
+    int64_t candidate_raw_delay_ns;
+    uint32_t candidate_distance_mm;
 } RangeEstimate;
 
 /* Pure DSP; run below the audio and sync tasks. No HAL or RTOS dependencies. */
 bool Range_Estimate(const RangeCapture *a, const RangeCapture *b,
                     const RangeConfig *config, RangeEstimate *result);
+bool Range_EstimateWindow(const RangeCapture *a, const RangeCapture *b,
+                         const RangeConfig *config, unsigned begin, unsigned end,
+                         RangeEstimate *result);
 bool Range_Convert(int64_t raw_ns, const RangeConfig *config, RangeEstimate *result);
 
 typedef enum {

@@ -4,6 +4,7 @@
 #include "arrival_time.h"
 #include "arrival_clock.h"
 #include "Ranging/range_recorder.h"
+#include "Diagnostics/pcm_dump.h"
 #include "TimeSync/time_sync.h"
 #include "TimeSync/Port/sync_log.h"
 #include "stm32746g_discovery_audio.h"
@@ -69,6 +70,7 @@ static void finish_capture(void) {
     taskEXIT_CRITICAL();
     if (slot < 0) { recorder.pending = false; return; }
     bool copied = RangeRecorder_Copy(&recorder, &captures[slot]);
+    if (copied) PcmDump_Submit(&captures[slot]);
     taskENTER_CRITICAL();
     capture_states[slot] = copied ? CAP_READY : CAP_FREE;
     taskEXIT_CRITICAL();
@@ -166,6 +168,7 @@ static void emit_event(const ArrivalDetection *onset, const AudioBlock *block,
         latest.clock_generation, event.time_ns, generation, &event.interval_ns);
     event.sample = onset->sample;
     event.peak = onset->peak; event.noise = onset->noise; event.threshold = onset->threshold;
+    event.confirmation_samples = onset->confirmation_samples;
     event.synchronized = synchronized; event.clipped = clipped || onset->peak >= 32760U;
     taskENTER_CRITICAL();
     latest = event; latest_valid = true;
@@ -180,22 +183,26 @@ static void emit_event(const ArrivalDetection *onset, const AudioBlock *block,
                  (uint32_t)(event.interval_ns / 1000000000ULL),
                  (uint32_t)(event.interval_ns % 1000000000ULL));
     }
-    char line[256];
+    char confirmation_text[32] = "";
+    if (event.confirmation_samples > ARRIVAL_CONFIRM_MIN_SAMPLES)
+        snprintf(confirmation_text, sizeof(confirmation_text), " confirm=%" PRIu32,
+                 event.confirmation_samples);
+    char line[288];
 #if APP_LOG_VERBOSE
     snprintf(line, sizeof(line), "AUDIO EVENT seq=%" PRIu32 " arrival=%" PRIu32 ".%09" PRIu32
              " epoch=%" PRIu32 " sample=%" PRIu32 " peak=%" PRIu32
-             " noise=%" PRIu32 " threshold=%" PRIu32 " sync=%s clipped=%u interval=%s\r\n",
+             " noise=%" PRIu32 " threshold=%" PRIu32 " sync=%s clipped=%u interval=%s%s\r\n",
              event.sequence, (uint32_t)(event.time_ns / 1000000000ULL),
              (uint32_t)(event.time_ns % 1000000000ULL), generation, (uint32_t)onset->sample,
              event.peak, event.noise, event.threshold, synchronized ? "LOCKED" : "LOCAL",
-             event.clipped ? 1U : 0U, interval_text);
+             event.clipped ? 1U : 0U, interval_text, confirmation_text);
 #else
     snprintf(line, sizeof(line), "AUDIO EVENT seq=%" PRIu32 " arrival=%" PRIu32 ".%09" PRIu32
-             " interval=%s peak=%" PRIu32 " noise=%" PRIu32 " threshold=%" PRIu32 " sync=%s%s\r\n",
+             " interval=%s peak=%" PRIu32 " noise=%" PRIu32 " threshold=%" PRIu32 " sync=%s%s%s\r\n",
              event.sequence, (uint32_t)(event.time_ns / 1000000000ULL),
              (uint32_t)(event.time_ns % 1000000000ULL), interval_text, event.peak,
              event.noise, event.threshold,
-             synchronized ? "LOCKED" : "LOCAL", event.clipped ? " clipped=1" : "");
+             synchronized ? "LOCKED" : "LOCAL", event.clipped ? " clipped=1" : "", confirmation_text);
 #endif
     SyncLog_Write(line);
 }
@@ -212,9 +219,10 @@ void audio_task(void const *argument) {
 #if APP_LOG_VERBOSE
     SyncLog_Write("AUDIO INIT: onboard DMIC2 channel=0, 16bit stereo DMA, nominal_fs=48000, warmup=1s; interval=seconds.nanoseconds (first: NA)\r\n");
 #else
-    char init_line[80];
-    snprintf(init_line, sizeof(init_line), "AUDIO INIT fs=48000 ch=%u gain=%u warmup=1s\r\n",
-             (unsigned)MIC_CHANNEL, (unsigned)INPUT_VOLUME);
+    char init_line[112];
+    snprintf(init_line, sizeof(init_line), "AUDIO INIT fs=48000 ch=%u gain=%u warmup=1s confirm=%u..%u\r\n",
+             (unsigned)MIC_CHANNEL, (unsigned)INPUT_VOLUME,
+             (unsigned)ARRIVAL_CONFIRM_MIN_SAMPLES, (unsigned)ARRIVAL_CONFIRM_MAX_SAMPLES);
     SyncLog_Write(init_line);
 #endif
     if (!start_stream()) {
