@@ -17,6 +17,7 @@
 
 #define RETRY_MS 12U
 #define TRANSACTION_MS 1500U
+#define PAIR_WAIT_MS 250U
 #define DISPLAY_LEAD_NS 250000000ULL
 #define CONFIG_RETRY_MS 100U
 #define CONFIG_HEARTBEAT_MS 500U
@@ -29,7 +30,7 @@ typedef enum { JOB_IDLE, JOB_RUNNING, JOB_DONE } JobState;
 
 static RangeCapture local_capture, remote_capture;
 static RangePacket result_packet;
-static RangeEstimate job_result, job_front_result;
+static RangeEstimate job_result, job_long_result, job_front_result;
 static uint32_t job_dsp_ms;
 static bool job_success, discard_job;
 static volatile JobState job_state;
@@ -77,9 +78,9 @@ static void publish(void) {
 }
 static void run_job(void) {
     TickType_t began = xTaskGetTickCount();
-    /* Both calculations read the same immutable pair. Only LONG is submitted
-       to the existing result state machine and Ethernet protocol. */
-    job_success = Range_Estimate(&local_capture, &remote_capture, &job_config, &job_result);
+    /* All windows read the same immutable pair and temperature configuration. */
+    job_success = Range_EstimateDirect(&local_capture, &remote_capture, &job_config,
+                                      &job_result, &job_long_result);
     Range_EstimateWindow(&local_capture, &remote_capture, &job_config,
                          RANGE_FRONT_BEGIN, RANGE_FRONT_END, &job_front_result);
     job_dsp_ms = (uint32_t)(xTaskGetTickCount() - began) * portTICK_PERIOD_MS;
@@ -172,11 +173,11 @@ static void log_comparison(const char *window, const RangeEstimate *r, bool fina
         snprintf(mm, sizeof(mm), "%" PRIu32, r->candidate_distance_mm);
     }
     if (final) snprintf(elapsed, sizeof(elapsed), " dsp_ms=%" PRIu32, job_dsp_ms);
-    char line[256];
+    char line[288];
     snprintf(line, sizeof(line), "RANGE CMP a=%" PRIu32 " b=%" PRIu32
-             " win=%s error=%u q=%s q2=%s gap=%s lag=%s frac=%s dt_ns=%s mm=%s%s\r\n",
+             " win=%s error=%u q=%s q2=%s gap=%s lag=%s frac=%s dt_ns=%s mm=%s span=%u:%u%s\r\n",
              local_capture.sequence, remote_capture.sequence, window, (unsigned)r->error,
-             q, q2, gap, lag, frac, delay, mm, elapsed);
+             q, q2, gap, lag, frac, delay, mm, (unsigned)r->window_begin, (unsigned)r->window_end, elapsed);
     SyncLog_Write(line);
 }
 static void complete_diagnostics(void) {
@@ -185,10 +186,12 @@ static void complete_diagnostics(void) {
     diagnostics.b_sequence = remote_capture.sequence;
     diagnostics.completed_ms = (uint32_t)xTaskGetTickCount() * portTICK_PERIOD_MS;
     diagnostics.dsp_ms = job_dsp_ms;
-    diagnostics.long_window = job_result;
+    diagnostics.long_window = job_long_result;
     diagnostics.front_window = job_front_result;
-    log_comparison("LONG", &job_result, false);
-    log_comparison("FRONT", &job_front_result, true);
+    diagnostics.direct_window = job_result;
+    log_comparison("LONG", &job_long_result, false);
+    log_comparison("FRONT", &job_front_result, false);
+    log_comparison("DIRECT", &job_result, true);
 }
 static void reset_transaction(void) {
     stage = IDLE; local_valid = false; remote_valid = false; transferred = 0;
@@ -584,11 +587,13 @@ void Ranging_Poll(void) {
 #else
         SyncLog_Write("RANGE INIT range_mm=200..2000\r\n");
 #endif
-        char windows[128];
-        snprintf(windows, sizeof(windows), "RANGE DSP primary=LONG compare=FRONT long=%u:%u front=%u:%u lag=-%d:%d\r\n",
+        char windows[176];
+        snprintf(windows, sizeof(windows), "RANGE DSP primary=DIRECT direct=%u:%u check_end=%u long=%u:%u front=%u:%u lag=-%d:%d pair_wait_ms=%u late_limit=%u\r\n",
+                 (unsigned)RANGE_FRONT_BEGIN, (unsigned)RANGE_DIRECT_END,
+                 (unsigned)RANGE_DIRECT_CHECK_END,
                  (unsigned)RANGE_LONG_BEGIN, (unsigned)RANGE_LONG_END,
                  (unsigned)RANGE_FRONT_BEGIN, (unsigned)RANGE_FRONT_END,
-                 RANGE_SEARCH_SAMPLES, RANGE_SEARCH_SAMPLES);
+                 RANGE_SEARCH_SAMPLES, RANGE_SEARCH_SAMPLES, (unsigned)PAIR_WAIT_MS, (unsigned)RANGE_LATE_LIMIT);
         SyncLog_Write(windows);
         announced = true;
     }
@@ -645,7 +650,12 @@ void Ranging_Poll(void) {
             }
         }
     }
-    if ((local_valid || remote_valid) && ms - started_ms > TRANSACTION_MS && stage != RESULT_TX && stage != DISPLAY_WAIT) {
+    /* Only the unpaired metadata wait uses the short deadline. Data transfer,
+       DSP and synchronized display retain their existing transaction budget. */
+    if ((local_valid || remote_valid) && (stage == IDLE || stage == META_TX) &&
+        !paired() && ms - started_ms > PAIR_WAIT_MS) {
+        reject("unpaired_expired", RANGE_BAD_CAPTURE, NULL);
+    } else if ((local_valid || remote_valid) && ms - started_ms > TRANSACTION_MS && stage != RESULT_TX && stage != DISPLAY_WAIT) {
         reject("timeout_or_unpaired", RANGE_BAD_CAPTURE, NULL);
     }
     if (ms - sent_ms >= RETRY_MS) {

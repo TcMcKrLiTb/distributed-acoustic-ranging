@@ -219,10 +219,11 @@ void audio_task(void const *argument) {
 #if APP_LOG_VERBOSE
     SyncLog_Write("AUDIO INIT: onboard DMIC2 channel=0, 16bit stereo DMA, nominal_fs=48000, warmup=1s; interval=seconds.nanoseconds (first: NA)\r\n");
 #else
-    char init_line[112];
-    snprintf(init_line, sizeof(init_line), "AUDIO INIT fs=48000 ch=%u gain=%u warmup=1s confirm=%u..%u\r\n",
+    char init_line[144];
+    snprintf(init_line, sizeof(init_line), "AUDIO INIT fs=48000 ch=%u gain=%u warmup=1s confirm=%u..%u rearm=%ums quiet=%ums\r\n",
              (unsigned)MIC_CHANNEL, (unsigned)INPUT_VOLUME,
-             (unsigned)ARRIVAL_CONFIRM_MIN_SAMPLES, (unsigned)ARRIVAL_CONFIRM_MAX_SAMPLES);
+             (unsigned)ARRIVAL_CONFIRM_MIN_SAMPLES, (unsigned)ARRIVAL_CONFIRM_MAX_SAMPLES,
+             (unsigned)(ARRIVAL_REFRACTORY_SAMPLES / 48U), (unsigned)(ARRIVAL_QUIET_SAMPLES / 48U));
     SyncLog_Write(init_line);
 #endif
     if (!start_stream()) {

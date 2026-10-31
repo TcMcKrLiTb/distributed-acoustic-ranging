@@ -13,6 +13,15 @@
 #define RANGE_LONG_END (RANGE_SAMPLES - 128U)
 #define RANGE_FRONT_BEGIN 128U
 #define RANGE_FRONT_END 384U
+/* Two nearby direct-sound windows end 4.0/4.67 ms after the coarse onset.
+   The longer capture is still searched to corroborate their selected phase. */
+#define RANGE_DIRECT_CHECK_END 448U
+#define RANGE_DIRECT_END 480U
+#define RANGE_DIRECT_MIN_QUALITY 850U
+#define RANGE_SUPPORT_MIN_QUALITY 500U
+#define RANGE_SUPPORT_MIN_MARGIN 21
+#define RANGE_LATE_LIMIT 1024U
+#define RANGE_LATE_SUPPORT_MIN 768U
 #define RANGE_WIRE_SIZE 56U
 #define RANGE_CHUNK_SAMPLES 16U
 #define RANGE_PAIR_NS 20000000LL
@@ -64,6 +73,15 @@ bool Range_Estimate(const RangeCapture *a, const RangeCapture *b,
 bool Range_EstimateWindow(const RangeCapture *a, const RangeCapture *b,
                          const RangeConfig *config, unsigned begin, unsigned end,
                          RangeEstimate *result);
+/* Accepted result requires both early windows and consistent LONG support.
+   A rejected weak precursor may be retried around a distinct later burst on
+   both boards. All reads remain within the original saved captures; returned
+   window bounds describe the actual searched spans, with no padded samples.
+   LONG and FRONT estimators above retain their original diagnostic behavior.
+   long_result may be NULL, otherwise it must not alias result. */
+bool Range_EstimateDirect(const RangeCapture *a, const RangeCapture *b,
+                         const RangeConfig *config, RangeEstimate *result,
+                         RangeEstimate *long_result);
 bool Range_Convert(int64_t raw_ns, const RangeConfig *config, RangeEstimate *result);
 
 typedef enum {

@@ -4,6 +4,7 @@
 #include <string.h>
 
 static int64_t abs64(int64_t x) { return x < 0 ? -x : x; }
+_Static_assert(RANGE_LATE_LIMIT + 96U <= RANGE_SAMPLES, "late confirmation stays inside the saved capture");
 
 bool Range_Convert(int64_t raw, const RangeConfig *c, RangeEstimate *r) {
     if (!c || !r || c->sound_speed_mm_s < 300000U || c->sound_speed_mm_s > 380000U ||
@@ -23,9 +24,9 @@ bool Range_Estimate(const RangeCapture *a, const RangeCapture *b,
     return Range_EstimateWindow(a, b, config, RANGE_LONG_BEGIN, RANGE_LONG_END, r);
 }
 
-bool Range_EstimateWindow(const RangeCapture *a, const RangeCapture *b,
-                         const RangeConfig *config, unsigned begin, unsigned end,
-                         RangeEstimate *r) {
+static bool estimate_centered(const RangeCapture *a, const RangeCapture *b,
+                              const RangeConfig *config, unsigned begin, unsigned end,
+                              int center, RangeEstimate *r) {
     if (!r) return false;
     memset(r, 0, sizeof(*r));
     r->error = RANGE_BAD_CAPTURE;
@@ -47,8 +48,8 @@ bool Range_EstimateWindow(const RangeCapture *a, const RangeCapture *b,
     float ratio = (float)a->period_ps / (float)b->period_ps;
     /* Check the entire interpolation domain before converting positions to
        unsigned indices, including unusual but otherwise valid clock ratios. */
-    float first_position = ((float)begin - RANGE_SEARCH_SAMPLES) * ratio;
-    float last_position = ((float)(end - 1U) + RANGE_SEARCH_SAMPLES) * ratio;
+    float first_position = ((float)begin + (float)center - RANGE_SEARCH_SAMPLES) * ratio;
+    float last_position = ((float)(end - 1U) + (float)center + RANGE_SEARCH_SAMPLES) * ratio;
     if (first_position < 0.0f || last_position >= (float)(RANGE_SAMPLES - 1U)) return false;
     float scores[2 * RANGE_SEARCH_SAMPLES + 1];
     const float n = (float)(end - begin);
@@ -66,7 +67,7 @@ bool Range_EstimateWindow(const RangeCapture *a, const RangeCapture *b,
     for (int k = -RANGE_SEARCH_SAMPLES; k <= RANGE_SEARCH_SAMPLES; ++k) {
         float sum_b = 0.0f, sq_b = 0.0f, dot = 0.0f;
         for (unsigned i = begin; i < end; ++i) {
-            float position = ((float)i + (float)k) * ratio;
+            float position = ((float)i + (float)k + (float)center) * ratio;
             unsigned j = (unsigned)position;
             if (j + 1U >= RANGE_SAMPLES) { r->error = RANGE_BAD_CAPTURE; return false; }
             float f = position - (float)j;
@@ -81,13 +82,13 @@ bool Range_EstimateWindow(const RangeCapture *a, const RangeCapture *b,
         if (score > best) { best = score; peak = k; }
     }
     r->quality_permille = best > 0.0f ? (uint32_t)(fminf(best, 1.0f) * 1000.0f + 0.5f) : 0;
-    r->peak_lag_samples = peak;
+    r->peak_lag_samples = peak + center;
     r->correlation_valid = true;
     float competitor = -2.0f;
     for (int k = -RANGE_SEARCH_SAMPLES; k <= RANGE_SEARCH_SAMPLES; ++k) {
         if (abs64(k - peak) > 12 && scores[k + RANGE_SEARCH_SAMPLES] > competitor) {
             competitor = scores[k + RANGE_SEARCH_SAMPLES];
-            r->competitor_lag_samples = k;
+            r->competitor_lag_samples = k + center;
         }
     }
     r->competitor_valid = competitor > -2.0f;
@@ -106,7 +107,7 @@ bool Range_EstimateWindow(const RangeCapture *a, const RangeCapture *b,
         fraction_valid = fraction >= -0.5f && fraction <= 0.5f;
         if (fraction_valid) {
             r->peak_fraction_samples = fraction;
-            int64_t correction = (int64_t)llround((double)((float)peak + fraction) *
+            int64_t correction = (int64_t)llround((double)((float)peak + fraction + (float)center) *
                                                  (double)a->period_ps / 1000.0);
             int64_t delay = (int64_t)b->start_ns - (int64_t)a->start_ns + correction;
             RangeEstimate candidate = {0};
@@ -130,9 +131,175 @@ bool Range_EstimateWindow(const RangeCapture *a, const RangeCapture *b,
         }
     }
     if (!fraction_valid) { r->error = RANGE_AMBIGUOUS; return false; }
-    int64_t correction = (int64_t)llround((double)((float)peak + fraction) * (double)a->period_ps / 1000.0);
+    int64_t correction = (int64_t)llround((double)((float)peak + fraction + (float)center) * (double)a->period_ps / 1000.0);
     int64_t delay = (int64_t)b->start_ns - (int64_t)a->start_ns + correction;
     return Range_Convert(delay, config, r);
+}
+
+bool Range_EstimateWindow(const RangeCapture *a, const RangeCapture *b,
+                         const RangeConfig *config, unsigned begin, unsigned end,
+                         RangeEstimate *r) {
+    return estimate_centered(a, b, config, begin, end, 0, r);
+}
+
+static bool reject_direct(RangeEstimate *r, RangeError error) {
+    /* Keep diagnostic candidates, but never leave an accepted distance behind
+       when another window vetoes the attempted result. */
+    r->raw_delay_ns = r->delay_ns = 0;
+    r->distance_mm = 0;
+    r->source_a = false;
+    r->error = error;
+    return false;
+}
+
+static bool direct_initial(const RangeCapture *a, const RangeCapture *b,
+                           const RangeConfig *config, RangeEstimate *r,
+                           RangeEstimate *long_result, const RangeEstimate *preview) {
+    if (!r) return false;
+    memset(r, 0, sizeof(*r));
+    r->error = RANGE_BAD_CAPTURE;
+    if (long_result == r) return false;
+    RangeEstimate support, check;
+    Range_Estimate(a, b, config, &support);
+    if (long_result) *long_result = support;
+    if (support.error == RANGE_BAD_CAPTURE || support.error == RANGE_LOW_SIGNAL)
+        return reject_direct(r, support.error);
+
+    bool check_ok = Range_EstimateWindow(a, b, config, RANGE_FRONT_BEGIN,
+                                         RANGE_DIRECT_CHECK_END, &check);
+    *r = *preview;
+    if (r->error != RANGE_OK) return reject_direct(r, r->error);
+    if (!check_ok) return reject_direct(r, check.error);
+    if (r->quality_permille < RANGE_DIRECT_MIN_QUALITY ||
+        check.quality_permille < RANGE_DIRECT_MIN_QUALITY ||
+        support.quality_permille < RANGE_SUPPORT_MIN_QUALITY)
+        return reject_direct(r, RANGE_LOW_CORRELATION);
+
+    /* A long-window correlation may be reduced by later reflections, but its
+       unambiguous phase must still support the same direct-sound delay. This
+       rejects unrelated early transients and conflicting periodic branches. */
+    if ((support.error != RANGE_OK && support.error != RANGE_LOW_CORRELATION) ||
+        !support.candidate_valid || !support.competitor_valid ||
+        support.peak_margin_permille < RANGE_SUPPORT_MIN_MARGIN)
+        return reject_direct(r, RANGE_AMBIGUOUS);
+    int64_t period_ns = (int64_t)(a->period_ps / 1000U);
+    if (abs64(check.raw_delay_ns - r->raw_delay_ns) > period_ns ||
+        abs64(support.candidate_raw_delay_ns - r->raw_delay_ns) > 2 * period_ns)
+        return reject_direct(r, RANGE_AMBIGUOUS);
+    return true;
+}
+
+/* Only revisit a weak initial burst followed by a low-energy gap and a much
+   stronger, confirmed burst. A continuous ramp has no gap and is not moved.
+   Two passes plus a 128-sample ring keep the worker's stack bounded. */
+static bool burst_anchor(const int16_t pcm[RANGE_SAMPLES], unsigned *onset) {
+    int32_t hp = 0, previous = 0;
+    uint32_t peak = 0, prefix = 0;
+    for (unsigned i = 0; i < RANGE_SAMPLES; ++i) {
+        hp = (int32_t)pcm[i] - previous + hp * 63 / 64;
+        previous = pcm[i];
+        uint32_t magnitude = (uint32_t)(hp < 0 ? -hp : hp);
+        if (i >= 64U && magnitude > peak) peak = magnitude;
+        if (i >= RANGE_PRE_SAMPLES && i < RANGE_DIRECT_END && magnitude > prefix)
+            prefix = magnitude;
+    }
+    uint32_t threshold = peak / 4U;
+    if (threshold < 128U) threshold = 128U;
+    if (prefix >= threshold) {
+        *onset = RANGE_PRE_SAMPLES;
+        return true;
+    }
+
+    int32_t history[128];
+    bool gap_history[128], gap = false;
+    uint64_t energy = 0;
+    hp = previous = 0;
+    for (unsigned i = 0; i < RANGE_LATE_LIMIT + 96U; ++i) {
+        hp = (int32_t)pcm[i] - previous + hp * 63 / 64;
+        previous = pcm[i];
+        if (i >= 48U) {
+            int64_t old = history[(i - 48U) % 128U];
+            energy -= (uint64_t)(old * old);
+        }
+        history[i % 128U] = hp;
+        energy += (uint64_t)((int64_t)hp * hp);
+        if (i >= RANGE_PRE_SAMPLES + 96U &&
+            energy * 1024ULL <= 48ULL * peak * peak) gap = true;
+        gap_history[i % 128U] = gap;
+        if (i < RANGE_PRE_SAMPLES + 192U) continue;
+        unsigned start = i - 96U;
+        int32_t first = history[start % 128U], before = history[(start - 1U) % 128U];
+        uint32_t magnitude = (uint32_t)(first < 0 ? -first : first);
+        uint32_t prior = (uint32_t)(before < 0 ? -before : before);
+        if (!gap_history[start % 128U] || magnitude < threshold || prior >= threshold) continue;
+        unsigned hits = 0, crossings = 0;
+        uint32_t local_peak = 0;
+        bool sign = first >= 0;
+        for (unsigned j = start; j <= i; ++j) {
+            int32_t value = history[j % 128U];
+            uint32_t abs_value = (uint32_t)(value < 0 ? -value : value);
+            if (abs_value >= threshold) hits++;
+            if (abs_value > local_peak) local_peak = abs_value;
+            if ((value >= 0) != sign) crossings++;
+            sign = value >= 0;
+        }
+        if (hits >= 8U && crossings >= 2U && local_peak >= 2U * threshold) {
+            *onset = start;
+            return true;
+        }
+    }
+    return false;
+}
+
+static bool direct_late(const RangeCapture *a, const RangeCapture *b,
+                        const RangeConfig *config, RangeEstimate *r,
+                        RangeEstimate *long_result) {
+    /* Invalid captures and out-of-range/ambiguous peaks never enter rescue. */
+    unsigned onset_a, onset_b;
+    if (!burst_anchor(a->pcm, &onset_a) || !burst_anchor(b->pcm, &onset_b) ||
+        (onset_a == RANGE_PRE_SAMPLES && onset_b == RANGE_PRE_SAMPLES)) return false;
+    int center = (int)lround((double)onset_b * (double)b->period_ps / (double)a->period_ps) - (int)onset_a;
+    unsigned begin = onset_a - 128U;
+    unsigned end = RANGE_LONG_END;
+    float ratio = (float)a->period_ps / (float)b->period_ps;
+    while (end > begin && ((float)(end - 1U) + center + RANGE_SEARCH_SAMPLES) * ratio >= RANGE_SAMPLES - 1U)
+        end--;
+    if (end - begin < RANGE_LATE_SUPPORT_MIN) return false;
+    RangeEstimate support, check, direct;
+    estimate_centered(a, b, config, begin, end, center, &support);
+    bool check_ok = estimate_centered(a, b, config, begin, onset_a + 192U, center, &check);
+    bool direct_ok = estimate_centered(a, b, config, begin, onset_a + 224U, center, &direct);
+    if (!check_ok || !direct_ok || check.quality_permille < RANGE_DIRECT_MIN_QUALITY ||
+        direct.quality_permille < RANGE_DIRECT_MIN_QUALITY ||
+        support.quality_permille < RANGE_SUPPORT_MIN_QUALITY ||
+        (support.error != RANGE_OK && support.error != RANGE_LOW_CORRELATION) ||
+        !support.candidate_valid || !support.competitor_valid ||
+        support.peak_margin_permille < RANGE_SUPPORT_MIN_MARGIN) return false;
+    int64_t period_ns = (int64_t)(a->period_ps / 1000U);
+    if (abs64(check.raw_delay_ns - direct.raw_delay_ns) > period_ns ||
+        abs64(support.candidate_raw_delay_ns - direct.raw_delay_ns) > 2 * period_ns) return false;
+    *r = direct;
+    if (long_result) *long_result = support;
+    return true;
+}
+
+bool Range_EstimateDirect(const RangeCapture *a, const RangeCapture *b,
+                         const RangeConfig *config, RangeEstimate *r,
+                         RangeEstimate *long_result) {
+    if (!r) return false;
+    if (long_result == r) {
+        memset(r, 0, sizeof(*r)); r->error = RANGE_BAD_CAPTURE;
+        return false;
+    }
+    RangeEstimate preview;
+    Range_EstimateWindow(a, b, config, RANGE_FRONT_BEGIN, RANGE_DIRECT_END, &preview);
+    /* Preview also validates flags, clocks and interpolation bounds. Try a
+       distinct later burst only for low correlation, never to bypass an
+       ambiguous or out-of-range early peak. Reuse the preview on the normal
+       path so a rescue does not pay for two full long-window searches. */
+    if (preview.error == RANGE_LOW_CORRELATION && direct_late(a, b, config, r, long_result))
+        return true;
+    return direct_initial(a, b, config, r, long_result, &preview);
 }
 
 static void put16(uint8_t *p, uint16_t v) { p[0] = (uint8_t)(v >> 8); p[1] = (uint8_t)v; }

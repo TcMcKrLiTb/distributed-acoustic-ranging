@@ -27,11 +27,11 @@ typedef struct {
 } RangingTemperatureStatus;
 
 /* A-only DSP snapshot for the latest paired attempt, including rejected peaks.
-   FRONT is diagnostic only; LONG alone drives the normal result protocol. */
+   DIRECT drives the result protocol; LONG corroborates it, FRONT is diagnostic. */
 typedef struct {
     bool valid;
     uint32_t a_sequence, b_sequence, completed_ms, dsp_ms;
-    RangeEstimate long_window, front_window;
+    RangeEstimate long_window, front_window, direct_window;
 } RangingDiagnostics;
 
 void Ranging_Init(void);

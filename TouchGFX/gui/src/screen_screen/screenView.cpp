@@ -105,21 +105,23 @@ void screenView::refreshDiagnostics()
     if (board == 'B') {
         set(correlationText, correlationTextBuffer, "Q DSP ON A");
         set(peakMarginText, peakMarginTextBuffer, "M DSP ON A");
-        std::snprintf(dspState, sizeof(dspState), "DSP ON A; FRONT DIAG");
+        std::snprintf(dspState, sizeof(dspState), "DSP ON A; DIRECT");
     } else if (haveDiagnostics) {
         const RangeEstimate& l = diagnostics.long_window;
         const RangeEstimate& f = diagnostics.front_window;
-        char lq[12] = "NA", fq[12] = "NA", lm[12] = "NA", fm[12] = "NA";
+        const RangeEstimate& d = diagnostics.direct_window;
+        char lq[12] = "NA", fq[12] = "NA", dq[12] = "NA", lm[12] = "NA", fm[12] = "NA";
         if (l.correlation_valid) std::snprintf(lq, sizeof(lq), "%lu", (unsigned long)l.quality_permille);
         if (f.correlation_valid) std::snprintf(fq, sizeof(fq), "%lu", (unsigned long)f.quality_permille);
+        if (d.correlation_valid) std::snprintf(dq, sizeof(dq), "%lu", (unsigned long)d.quality_permille);
         if (l.competitor_valid) std::snprintf(lm, sizeof(lm), "%ld", (long)l.peak_margin_permille);
         if (f.competitor_valid) std::snprintf(fm, sizeof(fm), "%ld", (long)f.peak_margin_permille);
-        std::snprintf(text, sizeof(text), "Q L%s F%s", lq, fq);
+        std::snprintf(text, sizeof(text), "Q D%s L%s F%s", dq, lq, fq);
         set(correlationText, correlationTextBuffer, text);
         std::snprintf(text, sizeof(text), "M L%s F%s", lm, fm);
         set(peakMarginText, peakMarginTextBuffer, text);
-        std::snprintf(dspState, sizeof(dspState), "LONG %s; FRONT %s DIAG",
-                      DebugText::error(l.error), DebugText::error(f.error));
+        std::snprintf(dspState, sizeof(dspState), "DIRECT %s; LONG %s",
+                      DebugText::error(d.error), DebugText::error(l.error));
     } else {
         set(correlationText, correlationTextBuffer, "Q LNA FNA");
         set(peakMarginText, peakMarginTextBuffer, "M LNA FNA");

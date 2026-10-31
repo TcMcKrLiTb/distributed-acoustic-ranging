@@ -7,6 +7,11 @@
 #define ARRIVAL_CONFIRM_MIN_SAMPLES 96U
 #define ARRIVAL_CONFIRM_MAX_SAMPLES 480U
 #define ARRIVAL_CANDIDATE_QUIET_SAMPLES 48U
+/* Ignore immediate repeats for 200 ms, then require 100 ms of quiet. A short
+   unrelated event must not mask the next test sound 400 ms later. Sustained
+   sound still cannot re-arm, even after the minimum holdoff has elapsed. */
+#define ARRIVAL_REFRACTORY_SAMPLES 9600U
+#define ARRIVAL_QUIET_SAMPLES 4800U
 
 typedef struct {
     uint64_t sample;

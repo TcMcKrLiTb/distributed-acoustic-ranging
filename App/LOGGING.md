@@ -1,5 +1,10 @@
 # 串口日志
 
+2026-10-31 更新：正式估计器为 DIRECT，CMP 每次输出 LONG、FRONT、DIRECT 三行，
+`dsp_ms` 位于 DIRECT 行；AUDIO INIT 追加 `rearm=200ms quiet=100ms`。
+CMP追加`span=begin:end`以记录实际分析跨度；支持提前触发重定位的版本启动含`late_limit=1024`。
+当前实现和测试见 [DIRECT 验证记录](Ranging/DIRECT_VALIDATION.md)，下文 LONG 发布描述属于修改前基线。
+
 默认使用精简模式，便于观察两板的声音事件和测距结果。串口仍为 1152000、8N1、无流控。
 
 当前 `feature/newRanging` 调试版默认开启 PCM 分块导出，并增加同一配对数据的

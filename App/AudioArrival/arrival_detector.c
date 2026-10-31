@@ -3,8 +3,6 @@
 
 /* Counts use the nominal 48 kHz rate; timestamp conversion uses the real clock. */
 #define WARMUP_SAMPLES 48000U
-#define REFRACTORY_SAMPLES 28800U
-#define QUIET_SAMPLES 4800U
 #define MIN_THRESHOLD 128U
 
 void ArrivalDetector_Reset(ArrivalDetector *d) {
@@ -36,7 +34,7 @@ bool ArrivalDetector_Push(ArrivalDetector *d, int16_t pcm,
         if (d->refractory) d->refractory--;
         if (magnitude < threshold / 2U) d->quiet++;
         else d->quiet = 0;
-        if (!d->refractory && d->quiet >= QUIET_SAMPLES) d->blocked = false;
+        if (!d->refractory && d->quiet >= ARRIVAL_QUIET_SAMPLES) d->blocked = false;
     } else if (d->candidate) {
         d->candidate_age++;
         if (magnitude > d->peak) d->peak = magnitude;
@@ -57,7 +55,7 @@ bool ArrivalDetector_Push(ArrivalDetector *d, int16_t pcm,
                 *event = d->onset;
                 detected = true;
                 d->blocked = true;
-                d->refractory = REFRACTORY_SAMPLES;
+                d->refractory = ARRIVAL_REFRACTORY_SAMPLES;
                 d->quiet = 0;
                 d->candidate = false;
             } else if (d->hits < 8U || d->crossings < 2U ||

@@ -107,6 +107,7 @@ static void reset(bool master_role, uint64_t now, uint32_t epoch) {
     memset(&local_capture, 0, sizeof(local_capture)); memset(&remote_capture, 0, sizeof(remote_capture));
     memset(&result_packet, 0, sizeof(result_packet)); memset(&job_result, 0, sizeof(job_result));
     memset(&job_front_result, 0, sizeof(job_front_result));
+    memset(&job_long_result, 0, sizeof(job_long_result));
     memset(&status, 0, sizeof(status)); memset(&published, 0, sizeof(published));
     memset(&diagnostics, 0, sizeof(diagnostics)); memset(&published_diagnostics, 0, sizeof(published_diagnostics));
     job_dsp_ms = 0; job_success = discard_job = false; job_state = JOB_IDLE;
@@ -138,7 +139,7 @@ static void reset(bool master_role, uint64_t now, uint32_t epoch) {
     CHECK(temperature.synchronized);
     CHECK(initialized && stage == IDLE && active_generation == epoch);
     CHECK(RANGE_SEARCH_SAMPLES == 127);
-    CHECK(lines("RANGE DSP primary=LONG compare=FRONT ") == 1);
+    CHECK(lines("RANGE DSP primary=DIRECT ") == 1);
 }
 static void offer(const RangeCapture *capture) { offered_capture = *capture; capture_ready = true; }
 static void metadata(const RangeCapture *capture) {
@@ -170,7 +171,7 @@ static void finish_job(void) {
     Ranging_Poll(); CHECK(job_state == JOB_IDLE);
 }
 static void expect_cmp(const char *window, const RangeEstimate *estimate, bool final) {
-    char expected[256], q[12] = "NA", q2[12] = "NA", gap[12] = "NA", lag[12] = "NA", frac[12] = "NA";
+    char expected[288], q[12] = "NA", q2[12] = "NA", gap[12] = "NA", lag[12] = "NA", frac[12] = "NA";
     char dt[SYNC_I64_TEXT_SIZE] = "NA", mm[12] = "NA", elapsed[32] = "";
     if (estimate->correlation_valid) {
         snprintf(q, sizeof(q), "%u", estimate->quality_permille);
@@ -186,9 +187,9 @@ static void expect_cmp(const char *window, const RangeEstimate *estimate, bool f
         snprintf(mm, sizeof(mm), "%u", estimate->candidate_distance_mm);
     }
     if (final) snprintf(elapsed, sizeof(elapsed), " dsp_ms=%u", job_dsp_ms);
-    snprintf(expected, sizeof(expected), "RANGE CMP a=%u b=%u win=%s error=%u q=%s q2=%s gap=%s lag=%s frac=%s dt_ns=%s mm=%s%s\r\n",
+    snprintf(expected, sizeof(expected), "RANGE CMP a=%u b=%u win=%s error=%u q=%s q2=%s gap=%s lag=%s frac=%s dt_ns=%s mm=%s span=%u:%u%s\r\n",
              local_capture.sequence, remote_capture.sequence, window, (unsigned)estimate->error,
-             q, q2, gap, lag, frac, dt, mm, elapsed);
+             q, q2, gap, lag, frac, dt, mm, estimate->window_begin, estimate->window_end, elapsed);
     CHECK(lines(expected) == 1);
 }
 static void wideband(RangeCapture *a, RangeCapture *b) {
@@ -240,8 +241,8 @@ static void old_pcm_front_is_not_published(void) {
 #endif
     CHECK(!s.valid && s.accepted == 0 && s.rejected == 1);
     CHECK(packets(RANGE_RESULT) == 0 && packets(RANGE_REJECT) == 1);
-    CHECK(lines("RANGE CMP ") == 2 && lines("RANGE RESULT ") == 0 && lines("RANGE REJECT ") == 1);
-    expect_cmp("LONG", &d.long_window, false); expect_cmp("FRONT", &d.front_window, true);
+    CHECK(lines("RANGE CMP ") == 3 && lines("RANGE RESULT ") == 0 && lines("RANGE REJECT ") == 1);
+    expect_cmp("LONG", &d.long_window, false); expect_cmp("FRONT", &d.front_window, false); expect_cmp("DIRECT", &d.direct_window, true);
     advance(1800); Ranging_Poll(); CHECK(packets(RANGE_RESULT) == 0 && status.accepted == 0);
     /* A later accepted local capture must clear the published previous attempt. */
     a.sequence++; a.onset_ns = fake_now - 50000000ULL; a.start_ns = a.onset_ns - 5334325ULL;
@@ -255,10 +256,10 @@ static void only_long_publishes_once(void) {
     CHECK(d.long_window.error == RANGE_OK && d.front_window.error == RANGE_OK);
     CHECK(stage == RESULT_TX && status.accepted == 0 && !status.valid);
     CHECK(packets(RANGE_RESULT) == 1 && next_result_id == 1);
-    CHECK(result_packet.delay_ns == d.long_window.delay_ns && result_packet.distance_mm == d.long_window.distance_mm);
+    CHECK(result_packet.delay_ns == d.direct_window.delay_ns && result_packet.distance_mm == d.direct_window.distance_mm);
     CHECK(result_packet.a_sequence == a.sequence && result_packet.b_sequence == b.sequence);
     CHECK(result_packet.generation == b.generation && result_packet.apply_ns - fake_now == DISPLAY_LEAD_NS);
-    CHECK(lines("RANGE CMP ") == 2); expect_cmp("LONG", &d.long_window, false); expect_cmp("FRONT", &d.front_window, true);
+    CHECK(lines("RANGE CMP ") == 3); expect_cmp("LONG", &d.long_window, false); expect_cmp("FRONT", &d.front_window, false); expect_cmp("DIRECT", &d.direct_window, true);
     RangePacket ack = {0}; ack.type = RANGE_RESULT_ACK; ack.sequence = result_packet.sequence; receive(&ack);
     CHECK(result_acked);
     advance(249); Ranging_Poll(); CHECK(status.accepted == 0 && lines("RANGE RESULT ") == 0);
@@ -269,7 +270,7 @@ static void only_long_publishes_once(void) {
     /* Starting from peer metadata also clears the previous DSP attempt. */
     b.sequence++; b.onset_ns = fake_now - 50000000ULL; b.start_ns = b.onset_ns - 5334325ULL;
     metadata(&b); Ranging_Poll(); CHECK(!Ranging_GetDiagnostics(&d) && !d.valid);
-    puts("PASS: one LONG result ID, peer ACK and 250 ms display; FRONT never adds accepted/result");
+    puts("PASS: one DIRECT result ID, peer ACK and 250 ms display; diagnostics never add accepted/result");
 }
 static void stale_dsp_is_discarded(bool epoch_change) {
     RangeCapture a, b; wideband(&a, &b); reset(true, a.onset_ns + 50000000ULL, a.generation);
@@ -314,6 +315,56 @@ static void slave_has_no_master_diagnostics(void) {
     CHECK(!Ranging_GetDiagnostics(&d) && !d.valid);
     puts("PASS: real slave META/DATA/ACK/RESULT path publishes no master DSP snapshot");
 }
+static void unpaired_wait_does_not_mask_next_sound(void) {
+    RangeCapture a, b; wideband(&a, &b);
+    /* Reproduce an unrelated local event 1.35 s ahead of the next real pair. */
+    reset(true, a.onset_ns + 50000000ULL, a.generation);
+    RangeCapture noise = a; noise.sequence--;
+    offer(&noise); Ranging_Poll(); CHECK(local_valid && stage == IDLE);
+    advance(251); Ranging_Poll(); CHECK(!local_valid && stage == IDLE);
+    CHECK(lines("RANGE REJECT reason=unpaired_expired ") == 1);
+    advance(1099);
+    a.onset_ns = fake_now - 50000000ULL; a.start_ns = a.onset_ns - 5334325ULL;
+    b.onset_ns = a.onset_ns + 2038320ULL; b.start_ns = b.onset_ns - 5334325ULL;
+    transfer_to_master(&a, &b);
+    /* The short pairing deadline must not expire an already paired DSP job. */
+    advance(300); Ranging_Poll(); CHECK(stage == DSP && job_state == JOB_RUNNING);
+    finish_job(); CHECK(stage == RESULT_TX);
+
+    reset(false, b.onset_ns + 50000000ULL, b.generation);
+    offer(&b); Ranging_Poll(); CHECK(stage == META_TX);
+    advance(251); Ranging_Poll(); CHECK(stage == IDLE && !local_valid);
+    CHECK(lines("RANGE REJECT reason=unpaired_expired ") == 1);
+    puts("PASS: stale unpaired A/B events expire; paired DSP keeps its full deadline");
+}
+static void realigned_burst_uses_normal_result_protocol(void) {
+    RangeCapture a, b; wideband(&a, &b);
+    memset(a.pcm, 0, sizeof(a.pcm)); memset(b.pcm, 0, sizeof(b.pcm));
+    uint32_t random = 12345U;
+    for (unsigned i = 256; i < 352; ++i) {
+        random = random * 1664525U + 1013904223U;
+        a.pcm[i] = (int16_t)((random >> 16) % 601U) - 300;
+        random = random * 1664525U + 1013904223U;
+        b.pcm[i] = (int16_t)((random >> 16) % 601U) - 300;
+    }
+    for (unsigned i = 0; i < 1100; ++i) {
+        random = random * 1664525U + 1013904223U;
+        a.pcm[700+i] = b.pcm[920+i] = (int16_t)((random >> 16) % 12001U) - 6000;
+    }
+    b.start_ns = a.start_ns + 4350000ULL - 220U * a.period_ps / 1000U;
+    b.onset_ns = b.start_ns + RANGE_PRE_SAMPLES * b.period_ps / 1000U;
+    reset(true, a.onset_ns + 50000000ULL, a.generation);
+    transfer_to_master(&a, &b); finish_job();
+    CHECK(stage == RESULT_TX && job_success && diagnostics.direct_window.window_begin > 128U);
+    CHECK(diagnostics.long_window.window_end - diagnostics.long_window.window_begin >= 768);
+    CHECK(result_packet.delay_ns > 4349000LL && result_packet.delay_ns < 4351000LL);
+    CHECK(result_packet.quality_permille >= 850U);
+    RangePacket ack = {0}; ack.type = RANGE_RESULT_ACK; ack.sequence = result_packet.sequence; receive(&ack);
+    advance(250); Ranging_Poll();
+    CHECK(status.valid && status.accepted == 1 && status.distance_mm == 1494U);
+    CHECK(lines("RANGE RESULT ") == 1);
+    puts("PASS: re-aligned saved windows use the normal result ACK and synchronized display");
+}
 static void log_bounds(void) {
     RangeCapture a, b; wideband(&a, &b); reset(true, a.onset_ns + 50000000ULL, a.generation);
     local_capture.sequence = remote_capture.sequence = UINT32_MAX;
@@ -323,9 +374,9 @@ static void log_bounds(void) {
     r.peak_fraction_samples = -.5f; r.candidate_raw_delay_ns = INT64_MIN;
     r.candidate_distance_mm = UINT32_MAX; job_dsp_ms = UINT32_MAX;
     log_comparison("LONG", &r, false); log_comparison("FRONT", &r, true);
-    CHECK(strstr(logs[log_count-1], "frac=-32768 dt_ns=-9223372036854775808 mm=4294967295 dsp_ms=4294967295\r\n"));
+    CHECK(strstr(logs[log_count-1], "frac=-32768 dt_ns=-9223372036854775808 mm=4294967295 span=0:0 dsp_ms=4294967295\r\n"));
     r = (RangeEstimate){0}; log_comparison("FRONT", &r, false);
-    CHECK(strstr(logs[log_count-1], "q=NA q2=NA gap=NA lag=NA frac=NA dt_ns=NA mm=NA\r\n"));
+    CHECK(strstr(logs[log_count-1], "q=NA q2=NA gap=NA lag=NA frac=NA dt_ns=NA mm=NA span=0:0\r\n"));
     CHECK(lines("RANGE CMP ") == 3);
     puts("PASS: startup/CMP lines fit buffers, invalid fields are NA, Q16 integer formatting needs no float printf");
 }
@@ -370,6 +421,8 @@ int main(void) {
     old_pcm_front_is_not_published(); only_long_publishes_once();
     stale_dsp_is_discarded(false); stale_dsp_is_discarded(true);
     slave_has_no_master_diagnostics(); log_bounds();
+    unpaired_wait_does_not_mask_next_sound();
+    realigned_burst_uses_normal_result_protocol();
     temperature_change_discards_old_dsp(); temperature_revalues_without_new_measurement();
     puts("All ranging flow integration checks passed."); return 0;
 }

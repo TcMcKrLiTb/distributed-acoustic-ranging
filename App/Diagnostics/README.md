@@ -1,5 +1,8 @@
 # PCM 串口诊断
 
+2026-10-31 更新：当前正式结果改为 DIRECT；LONG/FRONT 对照与本文其余实验描述属于旧基线。
+当前窗口、日志和验证结果见 [DIRECT 验证记录](../Ranging/DIRECT_VALIDATION.md)。PCM 数据格式保持不变。
+
 当前 `feature/newRanging` 调试版默认启用 `APP_PCM_DUMP=1`（`pcm_dump.h`），
 从 `temp/PCM` 恢复串口诊断模块，保留新 TouchGFX 页面设计。PCM 导出不改变声音检测、互相关门限或网口协议。
 每次完成供测距使用的 2048 点单通道采集后，两板分别导出自己的副本；包括低相关度等最终被拒绝的测量。
