@@ -6,6 +6,12 @@
   <Texts>
     <TextGroup Id="Group1" />
     <TextGroup Id="Unsorted">
+      <Text Id="__SingleUse_7X1D" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">本板PCM，等待数据</Translation>
+      </Text>
+      <Text Id="__SingleUse_4RSS" Alignment="Left" TypographyId="UI14">
+        <Translation Language="GB">&lt;value&gt;</Translation>
+      </Text>
       <Text Id="__SingleUse_MTE8" Alignment="Left" TypographyId="UI14">
         <Translation Language="GB">PPS异常计数</Translation>
       </Text>
@@ -81,9 +87,6 @@
       <Text Id="__SingleUse_CK4L" Alignment="Left" TypographyId="UI16">
         <Translation Language="GB">系统诊断</Translation>
       </Text>
-      <Text Id="__SingleUse_AGIU" Alignment="Left" TypographyId="UI14">
-        <Translation Language="GB">本板PCM，等待数据</Translation>
-      </Text>
       <Text Id="__SingleUse_BJDT" Alignment="Center" TypographyId="UI14">
         <Translation Language="GB">冻结</Translation>
       </Text>
@@ -106,7 +109,7 @@
         <Translation Language="GB">&lt;value&gt;</Translation>
       </Text>
       <Text Id="__SingleUse_KYKA" Alignment="Left" TypographyId="UI14">
-        <Translation Language="GB">&lt;value&gt;</Translation>
+        <Translation Language="GB">沈梦馨 23211331 黄文韬 23211063</Translation>
       </Text>
       <Text Id="__SingleUse_4ZNN" Alignment="Left" TypographyId="UI14">
         <Translation Language="GB">SIM</Translation>

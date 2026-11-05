@@ -2511,6 +2511,21 @@
             }
           },
           {
+            "Type": "TextArea",
+            "Name": "waveformInfoText_1",
+            "X": 12,
+            "Y": 36,
+            "Width": 300,
+            "Height": 20,
+            "TextId": "__SingleUse_4RSS",
+            "TextRotation": "0",
+            "Wildcard1": {
+              "TextId": "__SingleUse_7X1D",
+              "UseBuffer": true,
+              "BufferSize": 64
+            }
+          },
+          {
             "Type": "FlexButton",
             "Name": "navRangeButton",
             "Y": 228,
@@ -2812,17 +2827,12 @@
           {
             "Type": "TextArea",
             "Name": "waveformInfoText",
-            "X": 12,
-            "Y": 36,
-            "Width": 300,
+            "X": 29,
+            "Y": 192,
+            "Width": 361,
             "Height": 20,
             "TextId": "__SingleUse_KYKA",
-            "TextRotation": "0",
-            "Wildcard1": {
-              "TextId": "__SingleUse_AGIU",
-              "UseBuffer": true,
-              "BufferSize": 64
-            }
+            "TextRotation": "0"
           },
           {
             "Type": "TextArea",
@@ -2928,6 +2938,7 @@
             "Y": 184,
             "Width": 148,
             "Height": 40,
+            "Visible": false,
             "ButtonTrigger": {
               "Type": "ClickButtonTrigger"
             },
@@ -2983,6 +2994,7 @@
             "Y": 184,
             "Width": 148,
             "Height": 40,
+            "Visible": false,
             "ButtonTrigger": {
               "Type": "ClickButtonTrigger"
             },
@@ -3038,6 +3050,7 @@
             "Y": 184,
             "Width": 148,
             "Height": 40,
+            "Visible": false,
             "ButtonTrigger": {
               "Type": "ClickButtonTrigger"
             },
